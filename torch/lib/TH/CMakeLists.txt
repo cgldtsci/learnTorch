@@ -1,0 +1,157 @@
+cmake_minimum_required(VERSION 2.6)
+
+# avoid some cmake warnings
+IF(POLICY CMP0026)
+ CMAKE_POLICY(SET CMP0026 OLD)
+ENDIF()
+
+# CMAKE_CURRENT_SOURCE_DIR : the dir where contain CmakeLists.txt
+SET(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
+
+# Can be compiled standalone
+IF(NOT TH_INSTALL_BIN_SUBDIR
+    OR NOT TH_INSTALL_LIB_SUBDIR
+    OR NOT TH_INSTALL_INCLUDE_SUBDIR
+    OR NOT TH_INSTALL_CMAKE_SUBDIR)
+
+  SET(TH_INSTALL_BIN_SUBDIR "bin" CACHE PATH "TH install binary subdirectory")
+  SET(TH_INSTALL_LIB_SUBDIR "lib" CACHE PATH "TH install library subdirectory")
+  SET(TH_INSTALL_INCLUDE_SUBDIR "include" CACHE PATH "TH install include subdirectory")
+  SET(TH_INSTALL_CMAKE_SUBDIR "share/cmake/TH" CACHE PATH "TH install cmake subdirectory")
+ENDIF()
+
+# flags
+
+# microsoft vistual studio
+IF(MSVC)
+  # respect the standard
+  ADD_DEFINITIONS(-D_CRT_SECURE_NO_DEPRECATE=1)
+ENDIF(MSVC)
+
+# OpenMP support?
+# 并行编程
+SET(WITH_OPENMP ON CACHE BOOL "OpenMP support if available?")
+# False
+IF (APPLE AND CMAKE_COMPILER_IS_GNUCC)
+  EXEC_PROGRAM (uname ARGS -v  OUTPUT_VARIABLE DARWIN_VERSION)
+  STRING (REGEX MATCH "[0-9]+" DARWIN_VERSION ${DARWIN_VERSION})
+  MESSAGE (STATUS "MAC OS Darwin Version: ${DARWIN_VERSION}")
+  IF (DARWIN_VERSION GREATER 9)
+    SET(APPLE_OPENMP_SUCKS 1)
+  ENDIF (DARWIN_VERSION GREATER 9)
+  EXECUTE_PROCESS (COMMAND ${CMAKE_C_COMPILER} -dumpversion
+    OUTPUT_VARIABLE GCC_VERSION)
+  IF (APPLE_OPENMP_SUCKS AND GCC_VERSION VERSION_LESS 4.6.2)
+    MESSAGE(STATUS "Warning: Disabling OpenMP (unstable with this version of GCC)")
+    MESSAGE(STATUS " Install GCC >= 4.6.2 or change your OS to enable OpenMP")
+    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unknown-pragmas")
+    SET(WITH_OPENMP OFF CACHE BOOL "OpenMP support if available?" FORCE)
+  ENDIF ()
+ENDIF ()
+
+IF (WITH_OPENMP)
+  FIND_PACKAGE(OpenMP)
+  IF(OPENMP_FOUND)
+    MESSAGE(STATUS "Compiling with OpenMP support")
+    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+  ENDIF(OPENMP_FOUND)
+ENDIF (WITH_OPENMP)
+
+
+# ARM specific flags
+FIND_PACKAGE(ARM)
+IF (NEON_FOUND)
+  MESSAGE(STATUS "Neon found with compiler flag : -mfpu=neon -D__NEON__")
+  SET(CMAKE_C_FLAGS "-mfpu=neon -D__NEON__ ${CMAKE_C_FLAGS}")
+ENDIF (NEON_FOUND)
+IF (CORTEXA8_FOUND)
+  MESSAGE(STATUS "Cortex-A8 Found with compiler flag : -mcpu=cortex-a8")
+  SET(CMAKE_C_FLAGS "-mcpu=cortex-a8 -fprefetch-loop-arrays ${CMAKE_C_FLAGS}")
+ENDIF (CORTEXA8_FOUND)
+IF (CORTEXA9_FOUND)
+  MESSAGE(STATUS "Cortex-A9 Found with compiler flag : -mcpu=cortex-a9")
+  SET(CMAKE_C_FLAGS "-mcpu=cortex-a9 ${CMAKE_C_FLAGS}")
+ENDIF (CORTEXA9_FOUND)
+
+# True
+IF(UNIX)
+  INCLUDE(CheckFunctionExists)
+  SET(CMAKE_EXTRA_INCLUDE_FILES "sys/mman.h")
+  # found
+  CHECK_FUNCTION_EXISTS(mmap HAVE_MMAP)
+  IF(HAVE_MMAP)
+    ADD_DEFINITIONS(-DHAVE_MMAP=1)
+  ENDIF(HAVE_MMAP)
+  ADD_DEFINITIONS(-D_FILE_OFFSET_BITS=64)
+  # found
+  CHECK_FUNCTION_EXISTS(shm_open HAVE_SHM_OPEN)
+  IF(HAVE_SHM_OPEN)
+    ADD_DEFINITIONS(-DHAVE_SHM_OPEN=1)
+  ENDIF(HAVE_SHM_OPEN)
+  # found
+  CHECK_FUNCTION_EXISTS(shm_unlink HAVE_SHM_UNLINK)
+  IF(HAVE_SHM_UNLINK)
+    ADD_DEFINITIONS(-DHAVE_SHM_UNLINK=1)
+  ENDIF(HAVE_SHM_UNLINK)
+  # not found
+  CHECK_FUNCTION_EXISTS(malloc_usable_size HAVE_MALLOC_USABLE_SIZE)
+  IF(HAVE_MALLOC_USABLE_SIZE)
+    ADD_DEFINITIONS(-DHAVE_MALLOC_USABLE_SIZE=1)
+  ENDIF(HAVE_MALLOC_USABLE_SIZE)
+ENDIF(UNIX)
+
+FIND_PACKAGE(SSE)
+IF(C_SSE2_FOUND)
+  SET(CMAKE_C_FLAGS "${C_SSE2_FLAGS} -DUSE_SSE2 ${CMAKE_C_FLAGS}")
+ENDIF(C_SSE2_FOUND)
+IF(C_SSE3_FOUND)
+  SET(CMAKE_C_FLAGS "${C_SSE3_FLAGS} -DUSE_SSE3 ${CMAKE_C_FLAGS}")
+ENDIF(C_SSE3_FOUND)
+
+IF(C_AVX_FOUND OR C_SSE4_2_FOUND OR C_SSE4_1_FOUND)
+  SET(simd generic/simd/convolve.c)
+  SET_SOURCE_FILES_PROPERTIES(generic/simd/convolve.c PROPERTIES COMPILE_FLAGS "-std=c99")
+ENDIF(C_AVX_FOUND OR C_SSE4_2_FOUND OR C_SSE4_1_FOUND)
+
+IF(C_SSE4_1_FOUND)
+  SET(CMAKE_C_FLAGS "${C_SSE4_1_FLAGS} -DUSE_SSE4_1 ${CMAKE_C_FLAGS}")
+ENDIF(C_SSE4_1_FOUND)
+IF(C_SSE4_2_FOUND)
+  SET(CMAKE_C_FLAGS "${C_SSE4_2_FLAGS} -DUSE_SSE4_2 ${CMAKE_C_FLAGS}")
+ENDIF(C_SSE4_2_FOUND)
+
+IF(C_SSE4_1_FOUND OR C_SSE4_2_FOUND)
+  SET_SOURCE_FILES_PROPERTIES(generic/simd/convolve5x5_sse.c PROPERTIES COMPILE_FLAGS "-O3 -ffast-math -std=c99")
+  SET(simd ${simd} generic/simd/convolve5x5_sse.c)
+ENDIF(C_SSE4_1_FOUND OR C_SSE4_2_FOUND)
+
+IF(C_AVX_FOUND)
+  SET(CMAKE_C_FLAGS "-DUSE_AVX ${CMAKE_C_FLAGS}")
+  SET_SOURCE_FILES_PROPERTIES(generic/simd/convolve5x5_avx.c PROPERTIES COMPILE_FLAGS "-O3 -ffast-math -mavx -std=c99")
+  SET(simd ${simd} generic/simd/convolve5x5_avx.c)
+ENDIF(C_AVX_FOUND)
+
+SET(hdr
+  THGeneral.h THAllocator.h THStorage.h THTensor.h THTensorApply.h THBlas.h THMath.h
+  THLapack.h THLogAdd.h THRandom.h THVector.h THAtomic.h)
+SET(hdr
+  THGeneral.h)
+
+SET(src
+  THGeneral.c THAllocator.c THStorage.c THTensor.c THBlas.c THLapack.c
+  THLogAdd.c THRandom.c THFile.c THDiskFile.c THMemoryFile.c THAtomic.c)
+SET(src
+  THGeneral.c)
+
+SET(src ${src} ${hdr} ${simd})
+message(${src})
+ADD_LIBRARY(TH SHARED ${src})
+if(BUILD_STATIC)
+  ADD_LIBRARY(TH_static STATIC ${src})
+endif()
+
+SET_TARGET_PROPERTIES(TH PROPERTIES
+  VERSION   0
+  SOVERSION 0)
