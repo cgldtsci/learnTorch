@@ -146,9 +146,6 @@ SET(src
 
 SET(src ${src} ${hdr} ${simd})
 
-SET(src
-  THGeneral.c)
-
 message(${src})
 ADD_LIBRARY(TH SHARED ${src})
 if(BUILD_STATIC)
