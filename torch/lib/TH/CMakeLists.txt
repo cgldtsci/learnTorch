@@ -59,7 +59,6 @@ IF (WITH_OPENMP)
   ENDIF(OPENMP_FOUND)
 ENDIF (WITH_OPENMP)
 
-
 # ARM specific flags
 FIND_PACKAGE(ARM)
 IF (NEON_FOUND)
@@ -146,6 +145,10 @@ SET(src
   THGeneral.c)
 
 SET(src ${src} ${hdr} ${simd})
+
+SET(src
+  THGeneral.c)
+
 message(${src})
 ADD_LIBRARY(TH SHARED ${src})
 if(BUILD_STATIC)
@@ -155,3 +158,154 @@ endif()
 SET_TARGET_PROPERTIES(TH PROPERTIES
   VERSION   0
   SOVERSION 0)
+
+INCLUDE (CheckCSourceRuns)
+
+CHECK_C_SOURCE_RUNS("
+#include <stdatomic.h>
+int main()
+{
+  int a;
+  int oa;
+  atomic_store(&a, 1);
+  atomic_fetch_add(&a, 1);
+  oa = atomic_load(&a);
+  if(!atomic_compare_exchange_strong(&a, &oa, 3))
+    return -1;
+  return 0;
+}
+" HAS_C11_ATOMICS)
+
+IF(NOT HAS_C11_ATOMICS)
+  CHECK_C_SOURCE_RUNS("
+#include <intrin.h>
+int main()
+{
+  long a;
+  _InterlockedExchange(&a, 1);
+  _InterlockedExchangeAdd(&a, 1);
+  if(_InterlockedCompareExchange(&a, 3, 2) != 2)
+    return -1;
+  return 0;
+}
+" HAS_MSC_ATOMICS)
+
+  CHECK_C_SOURCE_RUNS("
+int main()
+{
+  int a;
+  __sync_lock_test_and_set(&a, 1);
+  __sync_fetch_and_add(&a, 1);
+  if(!__sync_bool_compare_and_swap(&a, 2, 3))
+    return -1;
+  return 0;
+}
+" HAS_GCC_ATOMICS)
+ENDIF()
+
+IF(HAS_C11_ATOMICS)
+  ADD_DEFINITIONS(-DUSE_C11_ATOMICS=1)
+  MESSAGE(STATUS "Atomics: using C11 intrinsics")
+ELSEIF(HAS_MSC_ATOMICS)
+  ADD_DEFINITIONS(-DUSE_MSC_ATOMICS=1)
+  MESSAGE(STATUS "Atomics: using MSVC intrinsics")
+ELSEIF(HAS_GCC_ATOMICS)
+  ADD_DEFINITIONS(-DUSE_GCC_ATOMICS=1)
+    MESSAGE(STATUS "Atomics: using GCC intrinsics")
+ELSE()
+  SET(CMAKE_THREAD_PREFER_PTHREAD TRUE)
+  FIND_PACKAGE(Threads)
+  IF(THREADS_FOUND)
+    ADD_DEFINITIONS(-DUSE_PTHREAD_ATOMICS=1)
+    TARGET_LINK_LIBRARIES(TH ${CMAKE_THREAD_LIBS_INIT})
+    MESSAGE(STATUS "Atomics: using pthread")
+  ENDIF()
+ENDIF()
+
+FIND_PACKAGE(BLAS)
+IF(BLAS_FOUND)
+  SET(USE_BLAS 1)
+  TARGET_LINK_LIBRARIES(TH ${BLAS_LIBRARIES})
+ENDIF(BLAS_FOUND)
+
+FIND_PACKAGE(LAPACK)
+IF(LAPACK_FOUND)
+  SET(USE_LAPACK 1)
+  TARGET_LINK_LIBRARIES(TH ${LAPACK_LIBRARIES})
+ENDIF(LAPACK_FOUND)
+
+IF(BLAS_IS_ACCELERATE)
+  MESSAGE(STATUS "BLAS FOUND IS ACCELERATE: Fix for sdot")
+ENDIF()
+
+IF (UNIX AND NOT APPLE)
+   INCLUDE(CheckLibraryExists)
+   # https://github.com/libgit2/libgit2/issues/2128#issuecomment-35649830
+   CHECK_LIBRARY_EXISTS(rt clock_gettime "time.h" NEED_LIBRT)
+   IF(NEED_LIBRT)
+     TARGET_LINK_LIBRARIES(TH rt)
+   ENDIF(NEED_LIBRT)
+ENDIF(UNIX AND NOT APPLE)
+
+IF(NOT MSVC)
+  TARGET_LINK_LIBRARIES(TH m)
+ENDIF(NOT MSVC)
+
+SET(CMAKE_REQUIRED_FLAGS_SAVE ${CMAKE_REQUIRED_FLAGS})
+FOREACH(KEYWORD "inline" "__inline__" "__inline")
+  IF(NOT DEFINED C_INLINE)
+
+    SET(CMAKE_REQUIRED_FLAGS "-Dinline=${KEYWORD} ${CMAKE_C_FLAGS}")
+    CHECK_C_SOURCE_RUNS("
+       static inline int static_foo()
+       {
+         return 0;
+       }
+
+       int main(int argc, char *argv[])
+       {
+         static_foo();
+         return 0;
+       }" C_HAS_${KEYWORD})
+
+    IF(C_HAS_${KEYWORD})
+      SET(C_INLINE TRUE)
+# Right now i put it in THGeneral.h -- debatable
+#      ADD_DEFINITIONS("-Dinline=${KEYWORD}")
+      SET(TH_INLINE ${KEYWORD})
+      MESSAGE(STATUS "C inline is supported (${KEYWORD})")
+    ENDIF(C_HAS_${KEYWORD})
+  ENDIF(NOT DEFINED C_INLINE)
+ENDFOREACH(KEYWORD)
+SET(CMAKE_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS_SAVE})
+
+IF(NOT DEFINED C_INLINE)
+  MESSAGE(STATUS "C inline seems not supported")
+# Right now i put it in THGeneral.h -- debatable
+#  ADD_DEFINITIONS("-Dinline=")
+SET(TH_INLINE "")
+ENDIF(NOT DEFINED C_INLINE)
+
+# Is __thread supported?
+INCLUDE (CheckCSourceCompiles)
+CHECK_C_SOURCE_COMPILES("static __thread int x = 1; int main() { return x; }" C_HAS_THREAD)
+IF(NOT DEFINED C_HAS_THREAD)
+  MESSAGE(STATUS "Warning: __thread is not supported, generating thread-unsafe code")
+ENDIF(NOT DEFINED C_HAS_THREAD)
+IF(C_HAS_THREAD)
+  SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DTH_HAVE_THREAD")
+ENDIF(C_HAS_THREAD)
+
+# torch/lib/build/TH
+# 设置头文件位置
+INCLUDE_DIRECTORIES("${CMAKE_CURRENT_BINARY_DIR}")
+CONFIGURE_FILE(THGeneral.h.in "${CMAKE_CURRENT_BINARY_DIR}/THGeneral.h")
+
+INSTALL(TARGETS TH
+  EXPORT TH-exports
+  RUNTIME DESTINATION "${TH_INSTALL_BIN_SUBDIR}"
+  LIBRARY DESTINATION "${TH_INSTALL_LIB_SUBDIR}"
+  ARCHIVE DESTINATION "${TH_INSTALL_LIB_SUBDIR}")
+
+ADD_EXECUTABLE(test test.c)
+target_link_libraries(test TH)

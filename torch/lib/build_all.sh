@@ -28,7 +28,7 @@ function build() {
               -DCMAKE_CXX_FLAGS="$FLAGS" \
               -DCUDA_NVCC_FLAGS="$BASIC_FLAGS" \
               -DTH_INCLUDE_PATH="$INSTALL_DIR/include"
-#  make install -j$(getconf _NPROCESSORS_ONLN)
+  make install -j$(getconf _NPROCESSORS_ONLN)
   cd ../..
 #
 #  if [[ $(uname) == 'Darwin' ]]; then

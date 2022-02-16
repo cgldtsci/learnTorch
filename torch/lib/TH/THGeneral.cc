@@ -1,6 +1,7 @@
-#include <stdio.h>
+#include <iostream>
+using namespace std;
 
 void defaultTorchErrorHandlerFunction(const char *msg, void *data)
 {
-    printf("defaultTorchErrorHandlerFunction\n");
+    cout << 'b' << endl;
 }
