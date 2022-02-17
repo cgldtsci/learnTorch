@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "THGeneral.h"
+#include "THAtomic.h"
 
 int main() {
     printf("Hello, World!\n");
@@ -13,7 +14,9 @@ int main() {
 //    THArgCheck(0,5,"%s","message");
 //$ Error: Assertion `5==3' failed.  at /Users/cgl/Desktop/MyProject/learnTorch/torch/lib/TH/test.c:14
 //    THAssert(5==3);
-    THAlloc(5);
+    USE_GCC_ATOMICS;
+    THAlloc(1e7);
+
     printf("end\n");
     return 0;
 }

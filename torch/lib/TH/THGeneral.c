@@ -1,4 +1,5 @@
 #include "THGeneral.h"
+#include "THAtomic.h"
 
 #ifndef TH_HAVE_THREAD
 #define __thread
@@ -102,24 +103,81 @@ void THSetArgErrorHandler( void (*torchArgErrorHandlerFunction_)(int argNumber, 
   torchArgErrorHandlerData = data;
 }
 
+static __thread void (*torchGCFunction)(void *data) = NULL;
+static __thread void *torchGCData;
+static long heapSize = 0;
 static __thread long heapDelta = 0;
 static const long heapMaxDelta = 1e6; // limit to +/- 1MB before updating heapSize
-//
-//// hooks into the TH heap tracking
-//void THHeapUpdate(long size) {
-//  heapDelta += size;
-//
-//  // batch updates to global heapSize to minimize thread contention
-//  if (labs(heapDelta) < heapMaxDelta) {
-//    return;
-//  }
-//
-//  long newHeapSize = applyHeapDelta();
-//
-//  if (size > 0) {
-//    maybeTriggerGC(newHeapSize);
-//  }
-//}
+static __thread long heapSoftmax = 3e8; // 300MB, adjusted upward dynamically
+static const double heapSoftmaxGrowthThresh = 0.8; // grow softmax if >80% max after GC
+static const double heapSoftmaxGrowthFactor = 1.4; // grow softmax by 40%
+
+/* Optional hook for integrating with a garbage-collected frontend.
+ *
+ * If torch is running with a garbage-collected frontend (e.g. Lua),
+ * the GC isn't aware of TH-allocated memory so may not know when it
+ * needs to run. These hooks trigger the GC to run in two cases:
+ *
+ * (1) When a memory allocation (malloc, realloc, ...) fails
+ * (2) When the total TH-allocated memory hits a dynamically-adjusted
+ *     soft maximum.
+ */
+void THSetGCHandler( void (*torchGCFunction_)(void *data), void *data )
+{
+  torchGCFunction = torchGCFunction_;
+  torchGCData = data;
+}
+
+static long getAllocSize(void *ptr) {
+#if defined(__unix) && defined(HAVE_MALLOC_USABLE_SIZE)
+    return malloc_usable_size(ptr);
+#elif defined(__APPLE__)
+    return malloc_size(ptr);
+#elif defined(_WIN32)
+    if(ptr) { return _msize(ptr); } else { return 0; }
+#else
+  return 0;
+#endif
+}
+
+static long applyHeapDelta() {
+    long newHeapSize = THAtomicAddLong(&heapSize, heapDelta) + heapDelta;
+    heapDelta = 0;
+    return newHeapSize;
+}
+
+/* (1) if the torch-allocated heap size exceeds the soft max, run GC
+ * (2) if post-GC heap size exceeds 80% of the soft max, increase the
+ *     soft max by 40%
+ */
+static void maybeTriggerGC(long curHeapSize) {
+    if (torchGCFunction && curHeapSize > heapSoftmax) {
+        torchGCFunction(torchGCData);
+
+        // ensure heapSize is accurate before updating heapSoftmax
+        long newHeapSize = applyHeapDelta();
+
+        if (newHeapSize > heapSoftmax * heapSoftmaxGrowthThresh) {
+            heapSoftmax = heapSoftmax * heapSoftmaxGrowthFactor;
+        }
+    }
+}
+
+// hooks into the TH heap tracking
+void THHeapUpdate(long size) {
+  heapDelta += size;
+
+  // batch updates to global heapSize to minimize thread contention
+  if (labs(heapDelta) < heapMaxDelta) {
+    return;
+  }
+
+  long newHeapSize = applyHeapDelta();
+
+  if (size > 0) {
+    maybeTriggerGC(newHeapSize);
+  }
+}
 
 static void* THAllocInternal(long size)
 {
@@ -143,7 +201,7 @@ static void* THAllocInternal(long size)
     ptr = malloc(size);
   }
 
-//  THHeapUpdate(getAllocSize(ptr));
+  THHeapUpdate(getAllocSize(ptr));
   return ptr;
 }
 
@@ -159,13 +217,13 @@ void* THAlloc(long size)
 
   ptr = THAllocInternal(size);
 
-//  if(!ptr && torchGCFunction) {
-//    torchGCFunction(torchGCData);
-//    ptr = THAllocInternal(size);
-//  }
-//
-//  if(!ptr)
-//    THError("$ Torch: not enough memory: you tried to allocate %dGB. Buy new RAM!", size/1073741824);
+  if(!ptr && torchGCFunction) {
+    torchGCFunction(torchGCData);
+    ptr = THAllocInternal(size);
+  }
+
+  if(!ptr)
+    THError("$ Torch: not enough memory: you tried to allocate %dGB. Buy new RAM!", size/1073741824);
 
   return ptr;
 }

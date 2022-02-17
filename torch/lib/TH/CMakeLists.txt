@@ -136,13 +136,13 @@ SET(hdr
   THGeneral.h THAllocator.h THStorage.h THTensor.h THTensorApply.h THBlas.h THMath.h
   THLapack.h THLogAdd.h THRandom.h THVector.h THAtomic.h)
 SET(hdr
-  THGeneral.h)
+  THGeneral.h THAtomic.h)
 
 SET(src
   THGeneral.c THAllocator.c THStorage.c THTensor.c THBlas.c THLapack.c
   THLogAdd.c THRandom.c THFile.c THDiskFile.c THMemoryFile.c THAtomic.c)
 SET(src
-  THGeneral.c)
+  THGeneral.c THAtomic.c)
 
 SET(src ${src} ${hdr} ${simd})
 
@@ -207,7 +207,7 @@ ELSEIF(HAS_MSC_ATOMICS)
   ADD_DEFINITIONS(-DUSE_MSC_ATOMICS=1)
   MESSAGE(STATUS "Atomics: using MSVC intrinsics")
 ELSEIF(HAS_GCC_ATOMICS)
-  ADD_DEFINITIONS(-DUSE_GCC_ATOMICS=1)
+  ADD_DEFINITIONS(-DUSE_GCC_ATOMICS=1) #use this
     MESSAGE(STATUS "Atomics: using GCC intrinsics")
 ELSE()
   SET(CMAKE_THREAD_PREFER_PTHREAD TRUE)
