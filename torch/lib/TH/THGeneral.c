@@ -227,3 +227,48 @@ void* THAlloc(long size)
 
   return ptr;
 }
+
+void* THRealloc(void *ptr, long size)
+{
+  if(!ptr)
+    return(THAlloc(size));
+
+  if(size == 0)
+  {
+    THFree(ptr);
+    return NULL;
+  }
+
+  if(size < 0)
+    THError("$ Torch: invalid memory size -- maybe an overflow?");
+
+  THHeapUpdate(-getAllocSize(ptr));
+  void *newptr = realloc(ptr, size);
+
+  if(!newptr && torchGCFunction) {
+    torchGCFunction(torchGCData);
+    newptr = realloc(ptr, size);
+  }
+  THHeapUpdate(getAllocSize(newptr ? newptr : ptr));
+
+  if(!newptr)
+    THError("$ Torch: not enough memory: you tried to reallocate %dGB. Buy new RAM!", size/1073741824);
+
+  return newptr;
+}
+
+void THFree(void *ptr)
+{
+  THHeapUpdate(-getAllocSize(ptr));
+  free(ptr);
+}
+
+double THLog1p(const double x)
+{
+#if (defined(_MSC_VER) || defined(__MINGW32__))
+  volatile double y = 1 + x;
+  return log(y) - ((y-1)-x)/y ;  /* cancels errors with IEEE arithmetic */
+#else
+  return log1p(x);
+#endif
+}

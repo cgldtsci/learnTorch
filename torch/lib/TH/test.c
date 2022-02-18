@@ -15,7 +15,11 @@ int main() {
 //$ Error: Assertion `5==3' failed.  at /Users/cgl/Desktop/MyProject/learnTorch/torch/lib/TH/test.c:14
 //    THAssert(5==3);
     USE_GCC_ATOMICS;
-    THAlloc(1e7);
+    void *alloc_ptr = THAlloc(1e7);
+    void *new_ptr = THRealloc(alloc_ptr, 100);
+    THFree(new_ptr);
+    double log1p_result = THLog1p(1.0);
+    printf("%f\n", log1p_result);
 
     printf("end\n");
     return 0;

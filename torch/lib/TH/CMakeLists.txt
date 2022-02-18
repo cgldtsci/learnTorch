@@ -304,5 +304,95 @@ INSTALL(TARGETS TH
   LIBRARY DESTINATION "${TH_INSTALL_LIB_SUBDIR}"
   ARCHIVE DESTINATION "${TH_INSTALL_LIB_SUBDIR}")
 
+INSTALL(FILES
+  TH.h
+#  THAllocator.h
+#  THMath.h
+#  THBlas.h
+#  THDiskFile.h
+#  THFile.h
+#  THFilePrivate.h
+  ${CMAKE_CURRENT_BINARY_DIR}/THGeneral.h
+#  THGenerateAllTypes.h
+#  THGenerateFloatTypes.h
+#  THGenerateIntTypes.h
+#  THLapack.h
+#  THLogAdd.h
+#  THMemoryFile.h
+#  THRandom.h
+#  THStorage.h
+#  THTensor.h
+#  THTensorApply.h
+#  THTensorDimApply.h
+#  THTensorMacros.h
+#  THVector.h
+  THAtomic.h
+  DESTINATION "${TH_INSTALL_INCLUDE_SUBDIR}/TH")
+
+
+# INSTALL(FILES
+#   generic/THBlas.c
+#   generic/THBlas.h
+#   generic/THLapack.c
+#   generic/THLapack.h
+#   generic/THStorage.c
+#   generic/THStorage.h
+#   generic/THStorageCopy.c
+#   generic/THStorageCopy.h
+#   generic/THTensor.c
+#   generic/THTensor.h
+#   generic/THTensorConv.c
+#   generic/THTensorConv.h
+#   generic/THTensorCopy.c
+#   generic/THTensorCopy.h
+#   generic/THTensorLapack.c
+#   generic/THTensorLapack.h
+#   generic/THTensorMath.c
+#   generic/THTensorMath.h
+#   generic/THTensorRandom.c
+#   generic/THTensorRandom.h
+#   generic/THVector.c
+#   DESTINATION "${TH_INSTALL_INCLUDE_SUBDIR}/TH/generic")
+
+IF (WIN32 AND NOT CYGWIN)
+  SET(BLAS_INSTALL_LIBRARIES "OFF"
+    CACHE BOOL "Copy the required BLAS DLLs into the TH install dirs")
+ENDIF (WIN32 AND NOT CYGWIN)
+
+MACRO(Install_Required_Library ln)
+    get_filename_component(libpath ${ln} PATH)
+    get_filename_component(libname ${ln} NAME_WE)
+    file(GLOB libdlls "${libpath}/${libname}*.dll")
+    install(PROGRAMS ${libdlls}
+      DESTINATION "${TH_INSTALL_BIN_SUBDIR}")
+ENDMACRO(Install_Required_Library libname)
+
+# TRUE AND FALSE
+IF (BLAS_FOUND AND BLAS_INSTALL_LIBRARIES)
+  IF (BLAS_goto2_LIBRARY)
+    Install_Required_Library(${BLAS_goto2_LIBRARY})
+    Install_Required_Library("${libpath}/libgfortran")
+    Install_Required_Library("${libpath}/libquadmath")
+    Install_Required_Library("${libpath}/libgcc")
+  ENDIF()
+  IF (BLAS_openblas_LIBRARY)
+    Install_Required_Library(${BLAS_openblas_LIBRARY})
+    Install_Required_Library("${libpath}/libquadmath")
+    Install_Required_Library("${libpath}/libgfortran")
+    Install_Required_Library("${libpath}/libquadmath")
+    Install_Required_Library("${libpath}/libgcc")
+  ENDIF()
+ENDIF()
+
+# Create THConfig.cmake
+GET_TARGET_PROPERTY(TH_OUTPUT_NAME TH LOCATION)
+# libTH.dylib
+GET_FILENAME_COMPONENT(TH_OUTPUT_NAME ${TH_OUTPUT_NAME} NAME)
+SET(TH_LIBRARIES "${CMAKE_INSTALL_PREFIX}/${TH_INSTALL_LIB_SUBDIR}/${TH_OUTPUT_NAME}")
+SET(TH_INCLUDE_DIR "${CMAKE_INSTALL_PREFIX}/${TH_INSTALL_INCLUDE_SUBDIR}/TH")
+CONFIGURE_FILE(THConfig.cmake.in "${CMAKE_CURRENT_BINARY_DIR}/cmake-exports/THConfig.cmake")
+INSTALL(FILES "${CMAKE_CURRENT_BINARY_DIR}/cmake-exports/THConfig.cmake"
+  DESTINATION "${TH_INSTALL_CMAKE_SUBDIR}")
+
 ADD_EXECUTABLE(test test.c)
 target_link_libraries(test TH)
