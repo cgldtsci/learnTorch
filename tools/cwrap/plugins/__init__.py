@@ -45,4 +45,11 @@ class CWrapPlugin(object):
     def process_call(self, code, option):
         return code
 
+from .StandaloneExtension import StandaloneExtension
+from .NullableArguments import NullableArguments
 from .ArgcountChecker import ArgcountChecker
+from .ConstantArguments import ConstantArguments
+from .OptionalArguments import OptionalArguments
+from .ArgumentReferences import ArgumentReferences
+from .BeforeCall import BeforeCall
+from .ReturnArguments import ReturnArguments

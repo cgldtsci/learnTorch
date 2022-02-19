@@ -2,6 +2,7 @@ import os
 import sys
 from string import Template
 from ..cwrap import cwrap
+from ..cwrap.plugins import StandaloneExtension, NullableArguments
 
 BASE_PATH = os.path.realpath(os.path.join(__file__, '..', '..', '..'))
 THNN_UTILS_PATH = os.path.join(BASE_PATH, 'torch', '_thnn', 'utils.py')
@@ -91,8 +92,8 @@ def wrap_nn():
     with open('torch/csrc/nn/THNN.cwrap', 'w') as f:
         f.write(wrapper)
     cwrap('torch/csrc/nn/THNN.cwrap', plugins=[
-        # StandaloneExtension('torch._thnn._THNN'),
-        # NullableArguments(),
+        StandaloneExtension('torch._thnn._THNN'),
+        NullableArguments(),
     ])
 
 def wrap_cunn():

@@ -1,6 +1,6 @@
 import yaml
 from string import Template
-from .plugins import ArgcountChecker
+from .plugins import ArgcountChecker, ConstantArguments, OptionalArguments, ArgumentReferences, BeforeCall, ReturnArguments
 
 class cwrap(object):
     RETURN_WRAPPERS = {
@@ -37,9 +37,8 @@ class cwrap(object):
 
     CALL_TEMPLATE = Template("$cname($arg_unpack)")
 
-    DEFAULT_PLUGIN_CLASSES = [ArgcountChecker
-        # , ConstantArguments, OptionalArguments, ArgumentReferences, BeforeCall, ReturnArguments
-    ]
+    DEFAULT_PLUGIN_CLASSES = [ArgcountChecker, ConstantArguments, OptionalArguments,
+                              ArgumentReferences, BeforeCall, ReturnArguments]
 
     def __init__(self, source, destination=None, plugins=[], default_plugins=True):
         if destination is None:
@@ -50,18 +49,18 @@ class cwrap(object):
             defaults = [cls() for cls in self.DEFAULT_PLUGIN_CLASSES]
             self.plugins = defaults + self.plugins
 
-        # for plugin in self.plugins:
-        #     plugin.initialize(self)
+        for plugin in self.plugins:
+            plugin.initialize(self)
 
         with open(source, 'r') as f:
             declarations = f.read()
 
         wrapper = self.wrap_declarations(declarations)
-        # for plugin in self.plugins:
-        #     wrapper = plugin.process_full_file(wrapper)
+        for plugin in self.plugins:
+            wrapper = plugin.process_full_file(wrapper)
 
-        # with open(destination, 'w') as f:
-        #     f.write(wrapper)
+        with open(destination, 'w') as f:
+            f.write(wrapper)
 
     def wrap_declarations(self, declarations):
         lines = declarations.split('\n')
@@ -77,19 +76,19 @@ class cwrap(object):
                 in_declaration = False
                 declaration = yaml.safe_load('\n'.join(declaration_lines))
                 self.set_declaration_defaults(declaration)
+
                 # Pass declaration in a list - maybe some plugins want to add
                 # multiple wrappers
                 declarations = [declaration]
-                # for plugin in self.plugins:
-                #     declarations = plugin.process_declarations(declarations)
+                for plugin in self.plugins:
+                    declarations = plugin.process_declarations(declarations)
                 # Generate wrappers for all declarations and append them to
                 # the output
                 for declaration in declarations:
                     wrapper = self.generate_wrapper(declaration)
-                    print(wrapper)
-                    # for plugin in self.plugins:
-                    #     wrapper = plugin.process_wrapper(wrapper, declaration)
-                    # output.append(wrapper)
+                    for plugin in self.plugins:
+                        wrapper = plugin.process_wrapper(wrapper, declaration)
+                    output.append(wrapper)
 
             elif in_declaration:
                 declaration_lines.append(line)
@@ -133,10 +132,10 @@ class cwrap(object):
         return new_args
 
     def search_plugins(self, fnname, args, fallback):
-        # for plugin in self.plugins:
-        #     wrapper = getattr(plugin, fnname)(*args)
-        #     if wrapper is not None:
-        #         return wrapper
+        for plugin in self.plugins:
+            wrapper = getattr(plugin, fnname)(*args)
+            if wrapper is not None:
+                return wrapper
         return fallback(*args)
 
     def get_type_check(self, arg, option):
@@ -158,27 +157,18 @@ class cwrap(object):
         wrapper = ''
         for i, option in enumerate(declaration['options']):
             option_wrapper = self.generate_option(option, is_first=(i == 0))
-            print('start')
-            print(option_wrapper)
-            print('end')
-            # for plugin in self.plugins:
-            #     option_wrapper = plugin.process_option_code(option_wrapper, option)
+            for plugin in self.plugins:
+                option_wrapper = plugin.process_option_code(option_wrapper, option)
             wrapper += option_wrapper
-        return self.get_wrapper_template(declaration)
-        # \
-            # .substitute(name=declaration['name'], options=wrapper)
+        return self.get_wrapper_template(declaration).substitute(name=declaration['name'], options=wrapper)
 
     def map_selected_arguments(self, base_fn_name, plugin_fn_name, option, arguments):
         result = []
         for arg in arguments:
             accessor = self.get_arg_accessor(arg, option)
-            try:
-                res = getattr(self, base_fn_name)(arg, option).substitute(arg=accessor)
-                print(res)
-            except Exception as e:
-                continue
-        #     for plugin in self.plugins:
-        #         res = getattr(plugin, plugin_fn_name)(res, arg, accessor)
+            res = getattr(self, base_fn_name)(arg, option).substitute(arg=accessor)
+            for plugin in self.plugins:
+                res = getattr(plugin, plugin_fn_name)(res, arg, accessor)
             result.append(res)
         return result
 
@@ -187,33 +177,28 @@ class cwrap(object):
             lambda arg: not 'ignore_check' in arg or not arg['ignore_check'],
             option['arguments']))
         option['num_checked_args'] = len(checked_args)
-        print(len(checked_args))
         for i, arg in enumerate(checked_args):
             arg['idx'] = i
 
         # Generate checks
-        print(option)
-        print(checked_args)
         arg_checks = self.map_selected_arguments('get_type_check',
                 'process_single_check', option, checked_args)
         arg_checks = ' &&\n          '.join(arg_checks)
-        print(arg_checks)
-        # for plugin in self.plugins:
-        #     arg_checks = plugin.process_all_checks(arg_checks, option)
-        #
+        for plugin in self.plugins:
+            arg_checks = plugin.process_all_checks(arg_checks, option)
+
         # Generate unpacks
         arg_unpack = self.map_selected_arguments('get_type_unpack',
                 'process_single_unpack', option, option['arguments'])
         arg_unpack = ', '.join(arg_unpack)
-        # print(arg_unpack)
-        # for plugin in self.plugins:
-        #     arg_unpack = plugin.process_all_unpacks(arg_unpack, option)
+        for plugin in self.plugins:
+            arg_unpack = plugin.process_all_unpacks(arg_unpack, option)
 
         # Generate call
         raw_call = self.CALL_TEMPLATE.substitute(cname=option['cname'], arg_unpack=arg_unpack)
         call = self.get_return_wrapper(option).substitute(call=raw_call)
-        # for plugin in self.plugins:
-        #     call = plugin.process_call(call, option)
+        for plugin in self.plugins:
+            call = plugin.process_call(call, option)
         call = '\n      '.join(map(lambda s: s.strip(), call.split('\n')))
 
         # Put everything together
