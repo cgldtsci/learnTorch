@@ -4,7 +4,6 @@ venv/
 */**/__pycache__
 */**/**/__pycache__
 */__pycache__
-torch/csrc/nn/THNN.cwrap
 torch/lib/tmp_install/
 torch/lib/*.dylib*
 torch/lib/*.h

@@ -89,6 +89,7 @@ def wrap_nn():
     for fn in nn_functions:
         for t in ['Float', 'Double']:
             wrapper += wrap_function(fn.name, t, fn.arguments)
+
     with open('torch/csrc/nn/THNN.cwrap', 'w') as f:
         f.write(wrapper)
     cwrap('torch/csrc/nn/THNN.cwrap', plugins=[
