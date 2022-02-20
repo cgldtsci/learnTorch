@@ -59,11 +59,37 @@ class build_deps(Command):
             sys.exit(1)
         generate_nn_wrappers()
 
+class build_ext(setuptools.command.build_ext.build_ext):
+    def run(self):
+        # cwrap depends on pyyaml, so we can't import it earlier
+        from tools.cwrap import cwrap
+#         from tools.cwrap.plugins.THPPlugin import THPPlugin
+#         from tools.cwrap.plugins.THPLongArgsPlugin import THPLongArgsPlugin
+#         from tools.cwrap.plugins.ArgcountSortPlugin import ArgcountSortPlugin
+#         from tools.cwrap.plugins.AutoGPU import AutoGPU
+#         cwrap('torch/csrc/generic/TensorMethods.cwrap', plugins=[
+#             THPLongArgsPlugin(), THPPlugin(), ArgcountSortPlugin(), AutoGPU()
+#         ])
+#         # It's an old-style class in Python 2.7...
+        setuptools.command.build_ext.build_ext.run(self)
+#
+    #
+    # sub_commands = [('build_py',      has_pure_modules),
+    #                 ('build_clib',    has_c_libraries),
+    #                 ('build_ext',     has_ext_modules),
+    #                 ('build_scripts', has_scripts),
+    #                ]
+
+class build(distutils.command.build.build):
+    sub_commands = [
+        ('build_deps', lambda self: True),
+    ] + distutils.command.build.build.sub_commands
+
 setup(name="torch", version="0.1",
     # ext_modules=extensions,
     cmdclass = {
-        # 'build': build,
-        # 'build_ext': build_ext,
+        'build': build,
+        'build_ext': build_ext,
         'build_deps': build_deps,
         # 'build_module': build_module,
         # 'install': install,
@@ -71,5 +97,5 @@ setup(name="torch", version="0.1",
     },
     # packages=packages,
     # package_data={'torch': ['lib/*.so*', 'lib/*.h']},
-    # install_requires=['pyyaml'],
+    install_requires=['pyyaml'],
 )
