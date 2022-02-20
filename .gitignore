@@ -11,3 +11,4 @@ torch/lib/*.h
 torch/lib/build
 torch/csrc/nn/THNN.cwrap
 torch/csrc/nn/THNN.cpp
+torch/csrc/generic/TensorMethods.cpp
