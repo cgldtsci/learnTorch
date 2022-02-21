@@ -210,7 +210,7 @@ THNN = Extension("torch._thnn._THNN",
     include_dirs=include_dirs,
     extra_link_args=extra_link_args + [make_relative_rpath('../lib')]
 )
-extensions.append(THNN)
+# extensions.append(THNN)
 
 
 if WITH_CUDA:
