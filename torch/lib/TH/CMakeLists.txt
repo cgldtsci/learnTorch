@@ -313,14 +313,14 @@ INSTALL(FILES
 #  THFile.h
 #  THFilePrivate.h
   ${CMAKE_CURRENT_BINARY_DIR}/THGeneral.h
-#  THGenerateAllTypes.h
+  THGenerateAllTypes.h
 #  THGenerateFloatTypes.h
 #  THGenerateIntTypes.h
 #  THLapack.h
 #  THLogAdd.h
 #  THMemoryFile.h
 #  THRandom.h
-#  THStorage.h
+  THStorage.h
 #  THTensor.h
 #  THTensorApply.h
 #  THTensorDimApply.h
@@ -330,13 +330,13 @@ INSTALL(FILES
   DESTINATION "${TH_INSTALL_INCLUDE_SUBDIR}/TH")
 
 
-# INSTALL(FILES
+ INSTALL(FILES
 #   generic/THBlas.c
 #   generic/THBlas.h
 #   generic/THLapack.c
 #   generic/THLapack.h
 #   generic/THStorage.c
-#   generic/THStorage.h
+   generic/THStorage.h
 #   generic/THStorageCopy.c
 #   generic/THStorageCopy.h
 #   generic/THTensor.c
@@ -352,7 +352,7 @@ INSTALL(FILES
 #   generic/THTensorRandom.c
 #   generic/THTensorRandom.h
 #   generic/THVector.c
-#   DESTINATION "${TH_INSTALL_INCLUDE_SUBDIR}/TH/generic")
+   DESTINATION "${TH_INSTALL_INCLUDE_SUBDIR}/TH/generic")
 
 IF (WIN32 AND NOT CYGWIN)
   SET(BLAS_INSTALL_LIBRARIES "OFF"
