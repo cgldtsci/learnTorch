@@ -1,9 +1,0 @@
-setup.py
-tools/__init__.py
-torch.egg-info/PKG-INFO
-torch.egg-info/SOURCES.txt
-torch.egg-info/dependency_links.txt
-torch.egg-info/requires.txt
-torch.egg-info/top_level.txt
-torch/csrc/Module.cpp
-torch/csrc/Storage.cpp
