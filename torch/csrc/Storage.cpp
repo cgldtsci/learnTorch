@@ -14,9 +14,10 @@ using namespace std;
 int main(int args, char const *argv[]){
     cout << 'a' << endl;
 //    cout << TH_GENERIC_FILE << endl;
-    THStorage;
+//    THStorage;
+//    THPStorage_(newObject)(NULL);
+//    PyObject *args2 = NULL;
+//    PyTuple_New(0);
+////    THPStorageClass;
     THPStorage_(newObject)(NULL);
-    PyObject *args2 = NULL;
-    PyTuple_New(0);
-//    THPStorageClass;
 }

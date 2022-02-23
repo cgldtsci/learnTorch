@@ -7,14 +7,14 @@ extern PyObject *THPStorageClass;
 
 PyObject * THPStorage_(newObject)(THStorage *ptr)
 {
-//  // TODO: error checking
-//  PyObject *args = PyTuple_New(0);
+  // TODO: error checking
+  PyObject *args = PyTuple_New(0);
 //  PyObject *kwargs = Py_BuildValue("{s:N}", "cdata", PyLong_FromVoidPtr(ptr));
 //  PyObject *instance = PyObject_Call(THPStorageClass, args, kwargs);
-//  Py_DECREF(args);
+  Py_DECREF(args);
 //  Py_DECREF(kwargs);
 //  return instance;
-    return NULL;
+    return args;
 }
 
 #endif
