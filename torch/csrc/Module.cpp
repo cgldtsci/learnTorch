@@ -2,8 +2,31 @@
 
 #include <TH/TH.h>
 
+#include "THP.h"
+
 PyObject* module;
 
+static bool THPModule_loadClasses(PyObject *self)
+{
+#define ASSERT_NOT_NULL(ptr) if (!(ptr)) { THPUtils_setError("couldn't load classes"); return false; }
+  PyObject *torch_module = PyImport_ImportModule("torch");
+  if (!torch_module) {
+    THPUtils_setError("class loader couldn't access torch module");
+    return false;
+  }
+
+  return true;
+#undef ASSERT_NOT_NULL
+
+}
+
+// Callback for python part. Used for additional initialization of python classes
+static PyObject * THPModule_initExtension(PyObject *self)
+{
+  if (!THPModule_loadClasses(self))         return NULL;
+
+  return PyBool_FromLong(true);
+}
 static PyObject * THPModule_getNumThreads(PyObject *module)
 {
 #ifdef _OPENMP
@@ -15,6 +38,7 @@ static PyObject * THPModule_getNumThreads(PyObject *module)
 
 static PyMethodDef TorchMethods[] = {
 
+  {"_initExtension",  (PyCFunction)THPModule_initExtension,     METH_NOARGS,  NULL},
   {"getNumThreads",   (PyCFunction)THPModule_getNumThreads,     METH_NOARGS,  NULL},
   {NULL, NULL, 0, NULL}
 
