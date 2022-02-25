@@ -19,5 +19,5 @@ int main(int args, char const *argv[]){
 //    PyObject *args2 = NULL;
 //    PyTuple_New(0);
 ////    THPStorageClass;
-    THPStorage_(newObject)(NULL);
+//    THPStorage_(newObject)(NULL);
 }

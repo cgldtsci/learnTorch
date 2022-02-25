@@ -2,6 +2,8 @@
 #define THP_STORAGE_INC
 
 #define THPStorage_(NAME) TH_CONCAT_4(THP,Real,Storage_,NAME)
+#define THPStorageType TH_CONCAT_3(THP,Real,StorageType)
+#define THPStorageBaseStr TH_CONCAT_STRING_2(Real,StorageBase)
 
 
 #include "generic/Storage.h"

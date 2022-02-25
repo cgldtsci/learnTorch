@@ -4,17 +4,70 @@
 
 /* A pointer to RealStorage class defined later in Python */
 extern PyObject *THPStorageClass;
+//
+//PyObject * THPStorage_(newObject)(THStorage *ptr)
+//{
+//  // TODO: error checking
+//  PyObject *args = PyTuple_New(0);
+////  PyObject *kwargs = Py_BuildValue("{s:N}", "cdata", PyLong_FromVoidPtr(ptr));
+////  PyObject *instance = PyObject_Call(THPStorageClass, args, kwargs);
+//  Py_DECREF(args);
+////  Py_DECREF(kwargs);
+////  return instance;
+//    return args;
+//}
 
-PyObject * THPStorage_(newObject)(THStorage *ptr)
+
+// TODO: implement equality
+PyTypeObject THPStorageType = {
+  PyVarObject_HEAD_INIT(NULL, 0)
+  "torch._C." THPStorageBaseStr,         /* tp_name */
+  NULL,                    /* tp_basicsize */
+  0,                                     /* tp_itemsize */
+  NULL,      /* tp_dealloc */
+  0,                                     /* tp_print */
+  0,                                     /* tp_getattr */
+  0,                                     /* tp_setattr */
+  0,                                     /* tp_reserved */
+  0,                                     /* tp_repr */
+  0,                                     /* tp_as_number */
+  0,                                     /* tp_as_sequence */
+  NULL,          /* tp_as_mapping */
+  0,                                     /* tp_hash  */
+  0,                                     /* tp_call */
+  0,                                     /* tp_str */
+  0,                                     /* tp_getattro */
+  0,                                     /* tp_setattro */
+  0,                                     /* tp_as_buffer */
+  0, /* tp_flags */
+  NULL,                                  /* tp_doc */
+  0,                                     /* tp_traverse */
+  0,                                     /* tp_clear */
+  0,                                     /* tp_richcompare */
+  0,                                     /* tp_weaklistoffset */
+  0,                                     /* tp_iter */
+  0,                                     /* tp_iternext */
+  NULL,   /* will be assigned in init */    /* tp_methods */
+  NULL,   /* will be assigned in init */    /* tp_members */
+  0,                                     /* tp_getset */
+  0,                                     /* tp_base */
+  0,                                     /* tp_dict */
+  0,                                     /* tp_descr_get */
+  0,                                     /* tp_descr_set */
+  0,                                     /* tp_dictoffset */
+  0,                                     /* tp_init */
+  0,                                     /* tp_alloc */
+  NULL,                    /* tp_new */
+};
+
+bool THPStorage_(init)(PyObject *module)
 {
-  // TODO: error checking
-  PyObject *args = PyTuple_New(0);
-//  PyObject *kwargs = Py_BuildValue("{s:N}", "cdata", PyLong_FromVoidPtr(ptr));
-//  PyObject *instance = PyObject_Call(THPStorageClass, args, kwargs);
-  Py_DECREF(args);
-//  Py_DECREF(kwargs);
-//  return instance;
-    return args;
+//  THPStorageType.tp_methods = THPStorage_(methods);
+//  THPStorageType.tp_members = THPStorage_(members);
+  if (PyType_Ready(&THPStorageType) < 0)
+    return false;
+  Py_INCREF(&THPStorageType);
+  PyModule_AddObject(module, THPStorageBaseStr, (PyObject *)&THPStorageType);
+  return true;
 }
-
 #endif
