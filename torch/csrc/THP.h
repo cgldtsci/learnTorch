@@ -17,6 +17,7 @@
 #define LIBRARY_STATE
 #define LIBRARY_STATE_NOARGS
 
+#include "Exceptions.h"
 #include "Storage.h"
 #include "utils.h" // This requires defined Storage and Tensor types
 

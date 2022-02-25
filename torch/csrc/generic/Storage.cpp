@@ -17,6 +17,17 @@ extern PyObject *THPStorageClass;
 //    return args;
 //}
 
+static PyObject * THPStorage_(pynew)(PyTypeObject *type, PyObject *args, PyObject *kwargs)
+{
+  HANDLE_TH_ERRORS
+
+  THPUtils_setError("test pynew error");
+  return NULL;
+
+  END_HANDLE_TH_ERRORS
+
+}
+
 
 // TODO: implement equality
 PyTypeObject THPStorageType = {
@@ -39,7 +50,7 @@ PyTypeObject THPStorageType = {
   0,                                     /* tp_getattro */
   0,                                     /* tp_setattro */
   0,                                     /* tp_as_buffer */
-  0, /* tp_flags */
+  Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /* tp_flags */
   NULL,                                  /* tp_doc */
   0,                                     /* tp_traverse */
   0,                                     /* tp_clear */
@@ -57,7 +68,7 @@ PyTypeObject THPStorageType = {
   0,                                     /* tp_dictoffset */
   0,                                     /* tp_init */
   0,                                     /* tp_alloc */
-  NULL,                    /* tp_new */
+  THPStorage_(pynew),                    /* tp_new */
 };
 
 bool THPStorage_(init)(PyObject *module)
