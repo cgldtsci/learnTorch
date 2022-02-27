@@ -4,7 +4,7 @@
 
 struct THPStorage {
   PyObject_HEAD
-//  THStorage *cdata;
+  THStorage *cdata;
 };
 
 bool THPStorage_(init)(PyObject *module);

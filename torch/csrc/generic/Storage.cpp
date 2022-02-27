@@ -20,9 +20,36 @@ extern PyObject *THPStorageClass;
 static PyObject * THPStorage_(pynew)(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
   HANDLE_TH_ERRORS
+  PyObject *cdata_ptr = NULL;     // keyword-only arg - cdata pointer value
+  long size = -1;                 // non-negative iff got a number - new storage size
+  bool args_ok = true;
+
+  if (kwargs != NULL && PyDict_Size(kwargs) == 1) {
+    cdata_ptr = PyDict_GetItemString(kwargs, "cdata");
+    args_ok = cdata_ptr != NULL;
+  } else if (args != NULL && PyTuple_Size(args) == 1) {
+    PyObject *arg = PyTuple_GET_ITEM(args, 0);
+    if (THPUtils_checkLong(arg)) {
+      args_ok = THPUtils_getLong(PyTuple_GET_ITEM(args, 0), &size);
+    } else {
+      iterator = PyObject_GetIter(arg);
+      args_ok = iterator != nullptr;
+      if (args_ok) {
+        size = PyObject_Length(arg);
+        args_ok = size != -1;
+      }
+    }
+  // Storage view
+  }
+
+  if (!args_ok) {
+    // TODO: nice error mossage
+    THPUtils_setError("invalid arguments");
+    return NULL;
+  }
 
   THPStoragePtr self = (THPStorage *)type->tp_alloc(type, 0);
-  return type->tp_alloc(type,0);
+  return (PyObject *)self.release();
 //  return (PyObject *)self;
 //
 //  if (self == nullptr) {
@@ -39,6 +66,25 @@ static PyObject * THPStorage_(pynew)(PyTypeObject *type, PyObject *args, PyObjec
 
 }
 
+static Py_ssize_t THPStorage_(length)(THPStorage *self)
+{
+  HANDLE_TH_ERRORS
+  return 5;
+  END_HANDLE_TH_ERRORS_RET(-1)
+}
+
+static PyObject * THPStorage_(get)(THPStorage *self, PyObject *index)
+{
+  HANDLE_TH_ERRORS
+  return (PyObject *)index;
+  END_HANDLE_TH_ERRORS
+}
+
+static PyMappingMethods THPStorage_(mappingmethods) = {
+  (lenfunc)THPStorage_(length),
+  (binaryfunc)THPStorage_(get),
+};
+
 
 // TODO: implement equality
 PyTypeObject THPStorageType = {
@@ -54,7 +100,7 @@ PyTypeObject THPStorageType = {
   0,                                     /* tp_repr */
   0,                                     /* tp_as_number */
   0,                                     /* tp_as_sequence */
-  NULL,          /* tp_as_mapping */
+  &THPStorage_(mappingmethods),          /* tp_as_mapping */
   0,                                     /* tp_hash  */
   0,                                     /* tp_call */
   0,                                     /* tp_str */
