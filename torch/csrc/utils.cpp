@@ -2,6 +2,11 @@
 #include <stdarg.h>
 #include <string>
 
+#include "THP.h"
+
+#include "generic/utils.cpp"
+#include <TH/THGenerateAllTypes.h>
+
 void THPUtils_setError(const char *format, ...)
 {
   static const size_t ERROR_BUFFER_SIZE = 1000;

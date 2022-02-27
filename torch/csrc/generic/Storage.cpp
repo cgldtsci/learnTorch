@@ -21,8 +21,19 @@ static PyObject * THPStorage_(pynew)(PyTypeObject *type, PyObject *args, PyObjec
 {
   HANDLE_TH_ERRORS
 
-  THPUtils_setError("test pynew error");
+  THPStoragePtr self = (THPStorage *)type->tp_alloc(type, 0);
+  return type->tp_alloc(type,0);
+//  return (PyObject *)self;
+//
+//  if (self == nullptr) {
+//    THPUtils_setError("test nullptr error");
+//
+//  }
+  THPUtils_setError("test pynew self error");
+
   return NULL;
+
+//  return (PyObject *)self.release();
 
   END_HANDLE_TH_ERRORS
 
