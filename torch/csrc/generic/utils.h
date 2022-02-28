@@ -4,6 +4,7 @@
 
 struct THPStorage;
 
+typedef class THPPointer<THStorage>      THStoragePtr;
 typedef class THPPointer<THPStorage>      THPStoragePtr;
 
 #endif

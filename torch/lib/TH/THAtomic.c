@@ -36,6 +36,29 @@ long THAtomicAddLong(long volatile *a, long value)
 #endif
 }
 
+int THAtomicAdd(int volatile *a, int value)
+{
+#if defined(USE_C11_ATOMICS)
+  return atomic_fetch_add(a, value);
+#elif defined(USE_MSC_ATOMICS)
+  return _InterlockedExchangeAdd((long*)a, value);
+#elif defined(USE_GCC_ATOMICS)
+  return __sync_fetch_and_add(a, value);
+#else
+  int oldvalue;
+  do {
+    oldvalue = *a;
+  } while (!THAtomicCompareAndSwap(a, oldvalue, (oldvalue + value)));
+  return oldvalue;
+#endif
+}
+
+
+int THAtomicDecrementRef(int volatile *a)
+{
+  return (THAtomicAdd(a, -1) == 1);
+}
+
 long THAtomicCompareAndSwapLong(long volatile *a, long oldvalue, long newvalue)
 {
 #if defined(USE_C11_ATOMICS)

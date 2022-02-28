@@ -27,9 +27,19 @@ typedef struct THStorage
     long size;
     int refcount;
     char flag;
-//    THAllocator *allocator;
-//    void *allocatorContext;
-//    struct THStorage *view;
+    THAllocator *allocator;
+    void *allocatorContext;
+    struct THStorage *view;
 } THStorage;
+
+/* takes ownership of data */
+TH_API THStorage* THStorage_(newWithData)(real *data, long size);
+
+TH_API THStorage* THStorage_(newWithAllocator)(long size,
+                                               THAllocator* allocator,
+                                               void *allocatorContext);
+
+/* might differ with other API (like CUDA) */
+TH_API void THStorage_(free)(THStorage *storage);
 
 #endif

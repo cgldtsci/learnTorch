@@ -136,13 +136,13 @@ SET(hdr
   THGeneral.h THAllocator.h THStorage.h THTensor.h THTensorApply.h THBlas.h THMath.h
   THLapack.h THLogAdd.h THRandom.h THVector.h THAtomic.h)
 SET(hdr
-  THGeneral.h THAtomic.h)
+  THGeneral.h THAllocator.h THAtomic.h)
 
 SET(src
   THGeneral.c THAllocator.c THStorage.c THTensor.c THBlas.c THLapack.c
   THLogAdd.c THRandom.c THFile.c THDiskFile.c THMemoryFile.c THAtomic.c)
 SET(src
-  THGeneral.c THAtomic.c)
+  THGeneral.c THAllocator.c THAtomic.c)
 
 SET(src ${src} ${hdr} ${simd})
 
@@ -306,7 +306,7 @@ INSTALL(TARGETS TH
 
 INSTALL(FILES
   TH.h
-#  THAllocator.h
+  THAllocator.h
 #  THMath.h
 #  THBlas.h
 #  THDiskFile.h

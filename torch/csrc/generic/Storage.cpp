@@ -17,10 +17,19 @@ extern PyObject *THPStorageClass;
 //    return args;
 //}
 
+bool THPStorage_(IsSubclass)(PyObject *storage)
+{
+  return PyObject_IsSubclass((PyObject*)Py_TYPE(storage), (PyObject*)&THPStorageType);
+}
+
 static PyObject * THPStorage_(pynew)(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
   HANDLE_TH_ERRORS
   PyObject *cdata_ptr = NULL;     // keyword-only arg - cdata pointer value
+  THPStorage *storage_arg = NULL; // storage to be viewed on
+  long storage_arg_size = -1;     // size for storage view
+  THPObjectPtr iterator;          // not null iff got a single iterable
+  long storage_arg_offset = 0;    // offset for storage view
   long size = -1;                 // non-negative iff got a number - new storage size
   bool args_ok = true;
 
@@ -40,6 +49,26 @@ static PyObject * THPStorage_(pynew)(PyTypeObject *type, PyObject *args, PyObjec
       }
     }
   // Storage view
+  } else if (args != NULL && PyTuple_Size(args) >= 1 && THPStorage_(IsSubclass)(PyTuple_GET_ITEM(args, 0))){
+    storage_arg = (THPStorage *)PyTuple_GET_ITEM(args, 0);
+    if (PyTuple_Size(args) >= 2 && !THPUtils_getLong(PyTuple_GET_ITEM(args, 1), &storage_arg_offset))
+        return NULL;
+    storage_arg_size = storage_arg->cdata->size - storage_arg_offset;
+    if (PyTuple_Size(args) >= 3 && !THPUtils_getLong(PyTuple_GET_ITEM(args, 2), &storage_arg_size))
+        return NULL;
+    if (storage_arg_offset < 0 || storage_arg_offset >= storage_arg->cdata->size) {
+      THPUtils_setError("Invalid storage offset (%ld)!\n", storage_arg_offset);
+      return NULL;
+      }
+    if (storage_arg_size < 1 || storage_arg_size > storage_arg->cdata->size - storage_arg_offset) {
+      THPUtils_setError("Invalid storage size (got %ld, but should be between 0 and %ld)!\n",
+          storage_arg_size);
+      return NULL;
+    }
+    if (PyTuple_Size(args) >= 4)
+      args_ok = false;
+  } else if (args && PyTuple_Size(args) != 0) {
+    args_ok = false;
   }
 
   if (!args_ok) {
@@ -49,6 +78,16 @@ static PyObject * THPStorage_(pynew)(PyTypeObject *type, PyObject *args, PyObjec
   }
 
   THPStoragePtr self = (THPStorage *)type->tp_alloc(type, 0);
+  if (self != nullptr) {
+    if (cdata_ptr) {
+      THStorage *ptr = (THStorage*)PyLong_AsVoidPtr(cdata_ptr);
+      self->cdata = ptr;
+    } else if (storage_arg) {
+      real *data_ptr = storage_arg->cdata->data + storage_arg_offset;
+//      THStoragePtr storage = THStorage_(newWithData)(LIBRARY_STATE data_ptr, storage_arg_size);
+
+    }
+  }
   return (PyObject *)self.release();
 //  return (PyObject *)self;
 //

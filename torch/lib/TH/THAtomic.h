@@ -7,6 +7,21 @@
  * *a += value,
  * return previous *a
 */
+TH_API int THAtomicAdd(int volatile *a, int value);
+
+
+/*
+ * *a--,
+ * return 1 if *a == 0 after the operation, 0 otherwise
+*/
+TH_API int THAtomicDecrementRef(int volatile *a);
+#endif
+
+
+/*
+ * *a += value,
+ * return previous *a
+*/
 TH_API long THAtomicAddLong(long volatile *a, long value);
 
 /*
@@ -16,4 +31,4 @@ TH_API long THAtomicAddLong(long volatile *a, long value);
 */
 TH_API long THAtomicCompareAndSwapLong(long volatile *a, long oldvalue, long newvalue);
 
-#endif
+

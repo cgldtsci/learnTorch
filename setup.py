@@ -144,13 +144,13 @@ main_sources = [
     # "torch/csrc/serialization.cpp",
 ]
 
-try:
-    import numpy as np
-    include_dirs += [np.get_include()]
-    main_sources += ["torch/csrc/numpy.cpp"]
-    extra_compile_args += ['-DWITH_NUMPY']
-except ImportError:
-    pass
+# try:
+#     import numpy as np
+#     include_dirs += [np.get_include()]
+#     main_sources += ["torch/csrc/numpy.cpp"]
+#     extra_compile_args += ['-DWITH_NUMPY']
+# except ImportError:
+#     pass
 
 
 if WITH_CUDA:

@@ -46,3 +46,12 @@ void THPUtils_setError(const char *format, ...)
   va_end(fmt_args);
   PyErr_SetString(PyExc_RuntimeError, buffer);
 }
+
+template<>
+void THPPointer<PyObject>::free() {
+  if (ptr)
+    Py_DECREF(ptr);
+}
+
+template class THPPointer<PyObject>;
+
