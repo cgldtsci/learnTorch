@@ -53,6 +53,10 @@ int THAtomicAdd(int volatile *a, int value)
 #endif
 }
 
+void THAtomicIncrementRef(int volatile *a)
+{
+  THAtomicAdd(a, 1);
+}
 
 int THAtomicDecrementRef(int volatile *a)
 {

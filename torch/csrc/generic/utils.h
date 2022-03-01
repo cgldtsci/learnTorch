@@ -7,4 +7,7 @@ struct THPStorage;
 typedef class THPPointer<THStorage>      THStoragePtr;
 typedef class THPPointer<THPStorage>      THPStoragePtr;
 
+bool THPUtils_(parseReal)(PyObject *value, real *result);
+real THPUtils_(unpackReal)(PyObject *value);
+
 #endif

@@ -32,12 +32,20 @@ typedef struct THStorage
     struct THStorage *view;
 } THStorage;
 
+TH_API THStorage* THStorage_(new)(void);
+
+TH_API THStorage* THStorage_(newWithSize)(long size);
+
 /* takes ownership of data */
 TH_API THStorage* THStorage_(newWithData)(real *data, long size);
 
 TH_API THStorage* THStorage_(newWithAllocator)(long size,
                                                THAllocator* allocator,
                                                void *allocatorContext);
+
+/* should not differ with API */
+TH_API void THStorage_(retain)(THStorage *storage);
+
 
 /* might differ with other API (like CUDA) */
 TH_API void THStorage_(free)(THStorage *storage);

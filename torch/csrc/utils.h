@@ -1,6 +1,8 @@
 #ifndef THP_WRAP_UTILS_INC
 #define THP_WRAP_UTILS_INC
 
+#define THPUtils_(NAME) TH_CONCAT_4(THP,Real,Utils_,NAME)
+
 void THPUtils_setError(const char *format, ...);
 
 #define THStoragePtr TH_CONCAT_3(TH,Real,StoragePtr)

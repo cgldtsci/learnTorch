@@ -3,6 +3,12 @@
 #else
 
 
+void THStorage_(retain)(THStorage *storage)
+{
+  if(storage && (storage->flag & TH_STORAGE_REFCOUNTED))
+    THAtomicIncrementRef(&storage->refcount);
+}
+
 void THStorage_(free)(THStorage *storage)
 {
   if(!storage)
@@ -21,6 +27,16 @@ void THStorage_(free)(THStorage *storage)
       THFree(storage);
     }
   }
+}
+
+THStorage* THStorage_(new)(void)
+{
+  return THStorage_(newWithSize)(0);
+}
+
+THStorage* THStorage_(newWithSize)(long size)
+{
+  return THStorage_(newWithAllocator)(size, &THDefaultAllocator, NULL);
 }
 
 THStorage* THStorage_(newWithData)(real *data, long size)

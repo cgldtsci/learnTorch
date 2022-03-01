@@ -9,6 +9,14 @@
 */
 TH_API int THAtomicAdd(int volatile *a, int value);
 
+/******************************************************************************
+ * refcounting functions
+ ******************************************************************************/
+
+/*
+ * *a++
+*/
+TH_API void THAtomicIncrementRef(int volatile *a);
 
 /*
  * *a--,

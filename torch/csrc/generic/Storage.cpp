@@ -82,27 +82,48 @@ static PyObject * THPStorage_(pynew)(PyTypeObject *type, PyObject *args, PyObjec
     if (cdata_ptr) {
       THStorage *ptr = (THStorage*)PyLong_AsVoidPtr(cdata_ptr);
       self->cdata = ptr;
-    } else if (storage_arg) {
-      real *data_ptr = storage_arg->cdata->data + storage_arg_offset;
-//      THStoragePtr storage = THStorage_(newWithData)(LIBRARY_STATE data_ptr, storage_arg_size);
-
+    } else if (iterator == nullptr && size >= 0) {
+      self->cdata = THStorage_(newWithSize)(LIBRARY_STATE size);
+    } else if (iterator != nullptr) {
+      self->cdata = THStorage_(newWithSize)(LIBRARY_STATE size);
+      long items_processed = 0;
+      THPObjectPtr item;
+      real v;
+      while ((item = PyIter_Next(iterator))) {
+        if (!THPUtils_(parseReal)(item, &v)) {
+          THPUtils_setError("expected a numeric type, but got %s", Py_TYPE(item)->tp_name);
+          return NULL;
+        }
+        if (items_processed == size) {
+          // TODO: error - iterator has too many items
+          return NULL;
+        }
+#ifndef THC_GENERIC_FILE
+        self->cdata->data[items_processed++] = v;
+#else
+        // TODO: this might be slow - consider batched updates?
+        THCStorage_(set)(LIBRARY_STATE self->cdata, items_processed++, v);
+#endif
+      }
+      // Iterator raised an exception
+      if (PyErr_Occurred()) {
+        return NULL;
+      }
+      // Iterator was too short
+      if (items_processed < size) {
+        // TODO; error message
+        return NULL;
+      }
     }
+    else {
+      self->cdata = THStorage_(new)(LIBRARY_STATE_NOARGS);
+    }
+
+    if (self->cdata == NULL)
+      return NULL;
   }
   return (PyObject *)self.release();
-//  return (PyObject *)self;
-//
-//  if (self == nullptr) {
-//    THPUtils_setError("test nullptr error");
-//
-//  }
-  THPUtils_setError("test pynew self error");
-
-  return NULL;
-
-//  return (PyObject *)self.release();
-
   END_HANDLE_TH_ERRORS
-
 }
 
 static Py_ssize_t THPStorage_(length)(THPStorage *self)
