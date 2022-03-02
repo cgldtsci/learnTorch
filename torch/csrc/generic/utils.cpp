@@ -2,6 +2,32 @@
 #define TH_GENERIC_FILE "generic/utils.cpp"
 #else
 
+
+// TODO This doesn't need to be in generic file
+bool THPUtils_(parseSlice)(PyObject *slice, Py_ssize_t len, Py_ssize_t *ostart, Py_ssize_t *ostop, Py_ssize_t *oslicelength)
+{
+  Py_ssize_t start, stop, step, slicelength;
+  if (PySlice_GetIndicesEx(
+// https://bugsfiles.kde.org/attachment.cgi?id=61186
+#if PY_VERSION_HEX >= 0x03020000
+         slice,
+#else
+         (PySliceObject *)slice,
+#endif
+         len, &start, &stop, &step, &slicelength) < 0) {
+    PyErr_SetString(PyExc_RuntimeError, "Got an invalid slice");
+    return false;
+  }
+  if (step != 1) {
+    PyErr_SetString(PyExc_RuntimeError, "Only step == 1 supported");
+    return false;
+  }
+  *ostart = start;
+  *ostop = stop;
+  if(oslicelength)
+    *oslicelength = slicelength;
+  return true;
+}
 bool THPUtils_(parseReal)(PyObject *value, real *result)
 {
   try {

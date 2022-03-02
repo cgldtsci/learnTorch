@@ -2,6 +2,15 @@
 #define TH_GENERIC_FILE "generic/THStorage.c"
 #else
 
+real* THStorage_(data)(const THStorage *self)
+{
+  return self->data;
+}
+
+long THStorage_(size)(const THStorage *self)
+{
+  return self->size;
+}
 
 void THStorage_(retain)(THStorage *storage)
 {
@@ -59,4 +68,9 @@ THStorage* THStorage_(newWithDataAndAllocator)(real* data, long size,
   return storage;
 }
 
+real THStorage_(get)(const THStorage *self, long idx)
+{
+  THArgCheck((idx >= 0) && (idx < self->size), 2, "out of bounds");
+  return self->data[idx];
+}
 #endif

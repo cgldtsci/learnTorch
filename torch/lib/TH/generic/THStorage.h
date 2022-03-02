@@ -32,6 +32,11 @@ typedef struct THStorage
     struct THStorage *view;
 } THStorage;
 
+TH_API real* THStorage_(data)(const THStorage*);
+TH_API long THStorage_(size)(const THStorage*);
+
+TH_API real THStorage_(get)(const THStorage*, long);
+
 TH_API THStorage* THStorage_(new)(void);
 
 TH_API THStorage* THStorage_(newWithSize)(long size);

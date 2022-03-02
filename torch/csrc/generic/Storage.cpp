@@ -4,18 +4,17 @@
 
 /* A pointer to RealStorage class defined later in Python */
 extern PyObject *THPStorageClass;
-//
-//PyObject * THPStorage_(newObject)(THStorage *ptr)
-//{
-//  // TODO: error checking
-//  PyObject *args = PyTuple_New(0);
-////  PyObject *kwargs = Py_BuildValue("{s:N}", "cdata", PyLong_FromVoidPtr(ptr));
-////  PyObject *instance = PyObject_Call(THPStorageClass, args, kwargs);
-//  Py_DECREF(args);
-////  Py_DECREF(kwargs);
-////  return instance;
-//    return args;
-//}
+
+PyObject * THPStorage_(newObject)(THStorage *ptr)
+{
+  // TODO: error checking
+  PyObject *args = PyTuple_New(0);
+  PyObject *kwargs = Py_BuildValue("{s:N}", "cdata", PyLong_FromVoidPtr(ptr));
+  PyObject *instance = PyObject_Call(THPStorageClass, args, kwargs);
+  Py_DECREF(args);
+  Py_DECREF(kwargs);
+  return instance;
+}
 
 bool THPStorage_(IsSubclass)(PyObject *storage)
 {
@@ -129,14 +128,57 @@ static PyObject * THPStorage_(pynew)(PyTypeObject *type, PyObject *args, PyObjec
 static Py_ssize_t THPStorage_(length)(THPStorage *self)
 {
   HANDLE_TH_ERRORS
-  return 5;
+  return THStorage_(size)(LIBRARY_STATE self->cdata);
   END_HANDLE_TH_ERRORS_RET(-1)
 }
+
 
 static PyObject * THPStorage_(get)(THPStorage *self, PyObject *index)
 {
   HANDLE_TH_ERRORS
-  return (PyObject *)index;
+  /* Integer index */
+  long nindex;
+  if ((PyLong_Check(index) || PyInt_Check(index))
+      && THPUtils_getLong(index, &nindex) == 1 ) {
+    if (nindex < 0)
+      nindex += THStorage_(size)(LIBRARY_STATE self->cdata);
+#if defined(TH_REAL_IS_FLOAT) || defined(TH_REAL_IS_DOUBLE) || \
+    defined(THC_REAL_IS_FLOAT) || defined(THC_REAL_IS_DOUBLE)
+    return PyFloat_FromDouble(THStorage_(get)(LIBRARY_STATE self->cdata, nindex));
+#elif defined(THC_REAL_IS_HALF)
+    return PyFloat_FromDouble(THC_half2float(THStorage_(get)(LIBRARY_STATE self->cdata, nindex)));
+#else
+    return PyLong_FromLong(THStorage_(get)(LIBRARY_STATE self->cdata, nindex));
+#endif
+  /* Slice index */
+  } else if (PySlice_Check(index)) {
+    Py_ssize_t start, stop, slicelength, len;
+    len = THStorage_(size)(LIBRARY_STATE self->cdata);
+    if (!THPUtils_(parseSlice)(index, len, &start, &stop, &slicelength))
+      return NULL;
+
+    real *data = THStorage_(data)(LIBRARY_STATE self->cdata);
+#ifndef THC_GENERIC_FILE
+    // TODO: this can leak memory if newWithData fails
+    real *new_data = (real*)THAlloc(slicelength * sizeof(real));
+    memcpy(new_data, data + start, slicelength * sizeof(real));
+    THStoragePtr new_storage = THStorage_(newWithData)(LIBRARY_STATE new_data, slicelength);
+//#else
+//    THStoragePtr new_storage = THStorage_(newWithSize)(LIBRARY_STATE slicelength);
+//    THStoragePtr view = THStorage_(newWithData)(LIBRARY_STATE data + start, slicelength);
+//    THStorage_(clearFlag)(LIBRARY_STATE view, TH_STORAGE_FREEMEM);
+//    THStorage_(copy)(LIBRARY_STATE new_storage, view);
+#endif
+    PyObject *_ret = THPStorage_(newObject)(new_storage);
+    new_storage.release();
+    return _ret;
+  }
+  char err_string[512];
+  snprintf (err_string, 512,
+      "%s %s", "Only indexing with integers and slices supported, but got type: ",
+      index->ob_type->tp_name);
+  PyErr_SetString(PyExc_RuntimeError, err_string);
+  return NULL;
   END_HANDLE_TH_ERRORS
 }
 
