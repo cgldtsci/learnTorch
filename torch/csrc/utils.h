@@ -19,6 +19,8 @@ public:
   THPPointer(): ptr(nullptr) {};
   THPPointer(T *ptr): ptr(ptr) {};
 //  THPPointer(THPPointer &&p) { free(); ptr = p.ptr; p.ptr = nullptr; };
+
+  ~THPPointer() { free(); };
   T * release() { T *tmp = ptr; ptr = NULL; return tmp; }
   // implit transform
   operator T*() { return ptr; }

@@ -24,6 +24,7 @@ bool THPUtils_(parseSlice)(PyObject *slice, Py_ssize_t len, Py_ssize_t *ostart, 
   }
   *ostart = start;
   *ostop = stop;
+  // oslicelength default value such as 4514102224
   if(oslicelength)
     *oslicelength = slicelength;
   return true;

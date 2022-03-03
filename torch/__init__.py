@@ -18,6 +18,8 @@ class CharStorage(torch._C.CharStorageBase, _StorageBase):
     pass
 class ByteStorage(torch._C.ByteStorageBase, _StorageBase):
     pass
-#
+
+_C._initExtension()
+
 # a = DoubleStorage
 # repr(a)
