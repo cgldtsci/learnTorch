@@ -4,5 +4,6 @@
 #include "THGeneral.h"
 
 #include "THStorage.h"
+#include "THTensor.h"
 
 #endif

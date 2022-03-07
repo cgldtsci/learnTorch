@@ -7,7 +7,6 @@
 PyObject* module;
 PyObject* tensor_classes;
 
-
 PyObject *THPDoubleStorageClass = NULL;
 PyObject *THPFloatStorageClass  = NULL;
 PyObject *THPLongStorageClass   = NULL;
@@ -47,6 +46,16 @@ static bool THPModule_loadClasses(PyObject *self)
   ASSERT_NOT_NULL(THPShortStorageClass  = PyMapping_GetItemString(module_dict,(char*)"ShortStorage"));
   ASSERT_NOT_NULL(THPCharStorageClass   = PyMapping_GetItemString(module_dict,(char*)"CharStorage"));
   ASSERT_NOT_NULL(THPByteStorageClass   = PyMapping_GetItemString(module_dict,(char*)"ByteStorage"));
+
+  ASSERT_NOT_NULL(THPDoubleTensorClass  = PyMapping_GetItemString(module_dict,(char*)"DoubleTensor"));
+  ASSERT_NOT_NULL(THPFloatTensorClass   = PyMapping_GetItemString(module_dict,(char*)"FloatTensor"));
+  ASSERT_NOT_NULL(THPLongTensorClass    = PyMapping_GetItemString(module_dict,(char*)"LongTensor"));
+  ASSERT_NOT_NULL(THPIntTensorClass     = PyMapping_GetItemString(module_dict,(char*)"IntTensor"));
+  ASSERT_NOT_NULL(THPShortTensorClass   = PyMapping_GetItemString(module_dict,(char*)"ShortTensor"));
+  ASSERT_NOT_NULL(THPCharTensorClass    = PyMapping_GetItemString(module_dict,(char*)"CharTensor"));
+  ASSERT_NOT_NULL(THPByteTensorClass    = PyMapping_GetItemString(module_dict,(char*)"ByteTensor"));
+
+  THPDefaultTensorClass = THPDoubleTensorClass;
 
   return true;
 
@@ -115,6 +124,14 @@ PyMODINIT_FUNC PyInit__C()
   ASSERT_TRUE(THPShortStorage_init(module));
   ASSERT_TRUE(THPCharStorage_init(module));
   ASSERT_TRUE(THPByteStorage_init(module));
+
+  ASSERT_TRUE(THPDoubleTensor_init(module));
+  ASSERT_TRUE(THPFloatTensor_init(module));
+  ASSERT_TRUE(THPLongTensor_init(module));
+  ASSERT_TRUE(THPIntTensor_init(module));
+  ASSERT_TRUE(THPShortTensor_init(module));
+  ASSERT_TRUE(THPCharTensor_init(module));
+  ASSERT_TRUE(THPByteTensor_init(module));
 
 #if PY_MAJOR_VERSION == 2
 #else
