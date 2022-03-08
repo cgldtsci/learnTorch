@@ -11,6 +11,7 @@ void THPUtils_setError(const char *format, ...);
 bool THPUtils_checkLong(PyObject *index);
 int THPUtils_getLong(PyObject *index, long *result);
 long THPUtils_unpackLong(PyObject *index);
+THLongStorage * THPUtils_getLongStorage(PyObject *args, int ignore_first=0);
 
 template<class T>
 class THPPointer {
