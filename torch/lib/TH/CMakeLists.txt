@@ -335,11 +335,11 @@ INSTALL(FILES
 #   generic/THBlas.h
 #   generic/THLapack.c
 #   generic/THLapack.h
-#   generic/THStorage.c
+   generic/THStorage.c
    generic/THStorage.h
 #   generic/THStorageCopy.c
 #   generic/THStorageCopy.h
-#   generic/THTensor.c
+   generic/THTensor.c
    generic/THTensor.h
 #   generic/THTensorConv.c
 #   generic/THTensorConv.h

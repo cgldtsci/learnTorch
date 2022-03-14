@@ -20,4 +20,15 @@ typedef struct THTensor
 
 } THTensor;
 
+/**** creation methods ****/
+TH_API THTensor *THTensor_(new)(void);
+TH_API THTensor *THTensor_(newWithTensor)(THTensor *tensor);
+
+/* stride might be NULL */
+TH_API THTensor *THTensor_(newWithStorage)(THStorage *storage_, long storageOffset_, THLongStorage *size_, THLongStorage *stride_);
+
+/* stride might be NULL */
+TH_API THTensor *THTensor_(newWithSize)(THLongStorage *size_, THLongStorage *stride_);
+TH_API void THTensor_(free)(THTensor *self);
+
 #endif

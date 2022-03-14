@@ -87,11 +87,101 @@ static PyObject * THPTensor_(pynew)(PyTypeObject *type, PyObject *args, PyObject
     return NULL;
   }
 
-  return PyLong_FromLong(1);
+  THPTensorPtr self = (THPTensor *)type->tp_alloc(type, 0);
+  if (self != nullptr) {
+    if (cdata_arg) {
+      self->cdata = (THTensor*)PyLong_AsVoidPtr(cdata_arg);
+    } else if (sizes_arg) {
+      self->cdata = THTensor_(newWithSize)(LIBRARY_STATE sizes_arg, nullptr);
+    } else if (tensor_arg) {
+      self->cdata = THTensor_(newWithTensor)(LIBRARY_STATE tensor_arg);
+    } else if (iterable_arg && iterator_lengths.size() == 1 && iterator_lengths[0] == 0) {
+      self->cdata = THTensor_(new)(LIBRARY_STATE_NOARGS);
+    } else if (iterable_arg) {
+      size_t iter_depth = iterator_lengths.size();
+      std::stack<THPObjectPtr> iterator_stack;
+      std::vector<size_t> items_processed(iter_depth);
+      Py_INCREF(iterable_arg);
+      THPObjectPtr item = iterable_arg;
+      PyObject *iter;
+      while (iterator_stack.size() != iter_depth) {
+        iter = PyObject_GetIter(item);
+        if (!iter) {
+          THPUtils_setError("inconsistent iterator depth");
+          return NULL;
+        }
+        iterator_stack.emplace(iter);
+        item = PyIter_Next(iter);
+        if (item == nullptr) {
+          THPUtils_setError("error or empty iter");
+          return NULL;
+        }
+      }
+      THLongStoragePtr sizes = THLongStorage_newWithSize(iter_depth);
+      long *sizes_data = sizes->data;
+      for (size_t s: iterator_lengths) {
+        *sizes_data++ = s;
+      }
+      THTensorPtr tensor = THTensor_(newWithSize)(LIBRARY_STATE sizes, NULL);
+
+      // TODO CUDA
+#ifndef THC_GENERIC_FILE
+#define SET_ITEM if (!THPUtils_(parseReal)(item, data++)) return NULL
+      real *data = tensor->storage->data;
+
+#endif
+      SET_ITEM;
+      items_processed[iter_depth-1]++;
+
+      while (!iterator_stack.empty()) {
+        PyObject *iter = iterator_stack.top().get();
+        // Parse items
+        if (iterator_stack.size() == iter_depth) {
+          while ((item = PyIter_Next(iter))) {
+            SET_ITEM;
+            items_processed[iter_depth-1]++;
+          }
+          if (items_processed[iter_depth-1] != iterator_lengths[iter_depth-1]) {
+            THPUtils_setError("inconsistent size");
+            return NULL;
+          }
+          iterator_stack.pop(); // this deallocates the iter
+        // Iterate on lower depths
+        } else {
+          item = PyIter_Next(iter);
+          if (item == nullptr) {
+            if (PyErr_Occurred())
+              return NULL;
+            if (items_processed[iterator_stack.size()-1]) {
+              THPUtils_setError("inconsistent size");
+              return NULL;
+            }
+            iterator_stack.pop(); // this deallocates the iter
+          } else {
+            PyObject *new_iter = PyObject_GetIter(item);
+            if (!new_iter) {
+              THPUtils_setError("non-iterable item");
+              return NULL;
+            }
+            items_processed[iterator_stack.size()] = 0;
+            iterator_stack.emplace(new_iter);
+          }
+        }
+      }
+      self->cdata = tensor.release();
+    } else {
+      self->cdata = THTensor_(new)(LIBRARY_STATE_NOARGS);
+    }
+
+    if (self->cdata == NULL)
+      return NULL;
+  }
+
+  return (PyObject *)self.release();
 
   END_HANDLE_TH_ERRORS
-
 }
+
 // TODO: implement equality
 PyTypeObject THPTensorType = {
   PyVarObject_HEAD_INIT(NULL, 0)

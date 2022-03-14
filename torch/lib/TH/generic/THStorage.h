@@ -54,5 +54,6 @@ TH_API void THStorage_(retain)(THStorage *storage);
 
 /* might differ with other API (like CUDA) */
 TH_API void THStorage_(free)(THStorage *storage);
+TH_API void THStorage_(resize)(THStorage *storage, long size);
 
 #endif

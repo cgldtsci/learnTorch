@@ -6,7 +6,9 @@
 void THPUtils_setError(const char *format, ...);
 
 #define THStoragePtr TH_CONCAT_3(TH,Real,StoragePtr)
+#define THTensorPtr  TH_CONCAT_3(TH,Real,TensorPtr)
 #define THPStoragePtr TH_CONCAT_3(THP,Real,StoragePtr)
+#define THPTensorPtr  TH_CONCAT_3(THP,Real,TensorPtr)
 
 bool THPUtils_checkLong(PyObject *index);
 int THPUtils_getLong(PyObject *index, long *result);
@@ -22,6 +24,7 @@ public:
 //  THPPointer(THPPointer &&p) { free(); ptr = p.ptr; p.ptr = nullptr; };
 
   ~THPPointer() { free(); };
+  T * get() { return ptr; }
   T * release() { T *tmp = ptr; ptr = NULL; return tmp; }
   // implit transform
   operator T*() { return ptr; }
