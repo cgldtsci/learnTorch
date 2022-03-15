@@ -48,6 +48,9 @@ TH_API THStorage* THStorage_(newWithAllocator)(long size,
                                                THAllocator* allocator,
                                                void *allocatorContext);
 
+TH_API THStorage* THStorage_(newWithDataAndAllocator)(
+    real* data, long size, THAllocator* allocator, void *allocatorContext);
+
 /* should not differ with API */
 TH_API void THStorage_(retain)(THStorage *storage);
 

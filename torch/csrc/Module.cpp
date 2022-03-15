@@ -1,7 +1,10 @@
 #include <Python.h>
 
+#include <stdbool.h>
+#include <unordered_map>
 #include <TH/TH.h>
 
+#define WITH_NUMPY_IMPORT_ARRAY
 #include "THP.h"
 
 PyObject* module;
@@ -25,6 +28,9 @@ PyObject *THPByteTensorClass    = NULL;
 
 PyObject *THPDefaultTensorClass = NULL;
 PyObject *THPGeneratorClass     = NULL;
+
+//// Used if no other generator is provided
+//THPGenerator *THPDefaultGenerator   = NULL;
 
 static bool THPModule_loadClasses(PyObject *self)
 {
@@ -63,10 +69,58 @@ static bool THPModule_loadClasses(PyObject *self)
 
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// Copy handlers
+////////////////////////////////////////////////////////////////////////////////
+
+#include "ModuleCopy.h"
+
+std::unordered_map<std::pair<PyObject *, PyObject *>, THPCopyFunction, pair_hasher> tensor_copy_handlers;
+std::unordered_map<std::pair<PyObject *, PyObject *>, THPCopyFunction, pair_hasher> storage_copy_handlers;
+
+#define COPY_METHODS(name) TH_CONCAT_2(name,_copy_handlers)
+#define IMPLEMENT_COPY_WITH_WRAPPER(name)                                      \
+bool TH_CONCAT_3(THPModule_,name,Copy)(PyObject *dst, PyObject *src)           \
+{                                                                              \
+  /* TODO: this won't work for subclasses, but is that a problem? */           \
+  auto it = COPY_METHODS(name).find(std::make_pair((PyObject*)Py_TYPE(dst), (PyObject*)Py_TYPE(src))); \
+  if (it == COPY_METHODS(name).end()) {                                        \
+    THPUtils_setError("Copy function from %s to %s isn't implemented!", Py_TYPE(src)->tp_name, Py_TYPE(dst)->tp_name); \
+    return false;                                                              \
+  }                                                                            \
+  (it->second)(dst, src);                                                      \
+  return true;                                                                 \
+}                                                                              \
+                                                                               \
+static PyObject * TH_CONCAT_3(THPModule_,name,CopyWrapper)(PyObject *unused, PyObject *args)\
+{                                                                              \
+  HANDLE_TH_ERRORS                                                             \
+  /* TODO: check args */                                                       \
+  PyObject *dst = PyTuple_GET_ITEM(args, 0);                                   \
+  PyObject *src = PyTuple_GET_ITEM(args, 1);                                   \
+  if (!TH_CONCAT_3(THPModule_,name,Copy)(dst, src)) {                          \
+    return NULL;                                                               \
+  }                                                                            \
+  /* TODO: return dst? */                                                      \
+  Py_RETURN_NONE;                                                              \
+  END_HANDLE_TH_ERRORS                                                         \
+}
+
+IMPLEMENT_COPY_WITH_WRAPPER(tensor)
+IMPLEMENT_COPY_WITH_WRAPPER(storage)
+#undef COPY_METHODS
+#undef IMPLEMENT_COPY_WITH_WRAPPER
+
+#include "ModuleCopy.cpp"
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
 // Callback for python part. Used for additional initialization of python classes
 static PyObject * THPModule_initExtension(PyObject *self)
 {
   if (!THPModule_loadClasses(self))         return NULL;
+  if (!THPModule_initCopy(self))            return NULL;
 
   return PyBool_FromLong(true);
 }

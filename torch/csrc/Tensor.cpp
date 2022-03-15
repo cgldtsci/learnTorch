@@ -4,8 +4,13 @@
 #include <stdbool.h>
 #include <vector>
 #include <stack>
+#include <tuple>
+//#include <TH/THMath.h>
 
 #include "THP.h"
 
 #include "generic/Tensor.cpp"
+#include <TH/THGenerateAllTypes.h>
+
+#include "generic/TensorCopy.cpp"
 #include <TH/THGenerateAllTypes.h>

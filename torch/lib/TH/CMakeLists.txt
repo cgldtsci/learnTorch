@@ -136,13 +136,13 @@ SET(hdr
   THGeneral.h THAllocator.h THStorage.h THTensor.h THTensorApply.h THBlas.h THMath.h
   THLapack.h THLogAdd.h THRandom.h THVector.h THAtomic.h)
 SET(hdr
-  THGeneral.h THAllocator.h THStorage.h THTensor.h THAtomic.h)
+  THGeneral.h THAllocator.h THStorage.h THTensor.h THTensorApply.h THAtomic.h)
 
 SET(src
   THGeneral.c THAllocator.c THStorage.c THTensor.c THBlas.c THLapack.c
   THLogAdd.c THRandom.c THFile.c THDiskFile.c THMemoryFile.c THAtomic.c)
 SET(src
-  THGeneral.c THAllocator.c THAtomic.c)
+  THGeneral.c THAllocator.c THStorage.c THTensor.c THAtomic.c)
 
 SET(src ${src} ${hdr} ${simd})
 
@@ -322,7 +322,7 @@ INSTALL(FILES
 #  THRandom.h
   THStorage.h
   THTensor.h
-#  THTensorApply.h
+  THTensorApply.h
 #  THTensorDimApply.h
 #  THTensorMacros.h
 #  THVector.h
@@ -337,14 +337,14 @@ INSTALL(FILES
 #   generic/THLapack.h
    generic/THStorage.c
    generic/THStorage.h
-#   generic/THStorageCopy.c
-#   generic/THStorageCopy.h
+   generic/THStorageCopy.c
+   generic/THStorageCopy.h
    generic/THTensor.c
    generic/THTensor.h
 #   generic/THTensorConv.c
 #   generic/THTensorConv.h
-#   generic/THTensorCopy.c
-#   generic/THTensorCopy.h
+   generic/THTensorCopy.c
+   generic/THTensorCopy.h
 #   generic/THTensorLapack.c
 #   generic/THTensorLapack.h
 #   generic/THTensorMath.c

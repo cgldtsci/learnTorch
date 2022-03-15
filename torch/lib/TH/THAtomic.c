@@ -19,6 +19,48 @@
 static pthread_mutex_t ptm = PTHREAD_MUTEX_INITIALIZER;
 #endif
 
+int THAtomicGet(int volatile *a)
+{
+#if defined(USE_C11_ATOMICS)
+  return atomic_load(a);
+#else
+  int value;
+  do {
+    value = *a;
+  } while (!THAtomicCompareAndSwap(a, value, value));
+  return value;
+#endif
+}
+
+
+int THAtomicCompareAndSwap(int volatile *a, int oldvalue, int newvalue)
+{
+#if defined(USE_C11_ATOMICS)
+  return atomic_compare_exchange_strong(a, &oldvalue, newvalue);
+#elif defined(USE_MSC_ATOMICS)
+  return (_InterlockedCompareExchange((long*)a, (long)newvalue, (long)oldvalue) == (long)oldvalue);
+#elif defined(USE_GCC_ATOMICS)
+  return __sync_bool_compare_and_swap(a, oldvalue, newvalue);
+#elif defined(USE_PTHREAD_ATOMICS)
+  int ret = 0;
+  pthread_mutex_lock(&ptm);
+  if(*a == oldvalue) {
+    *a = newvalue;
+    ret = 1;
+  }
+  pthread_mutex_unlock(&ptm);
+  return ret;
+#else
+#warning THAtomic is not thread safe
+  if(*a == oldvalue) {
+    *a = newvalue;
+    return 1;
+  }
+  else
+    return 0;
+#endif
+}
+
 long THAtomicAddLong(long volatile *a, long value)
 {
 #if defined(USE_C11_ATOMICS)

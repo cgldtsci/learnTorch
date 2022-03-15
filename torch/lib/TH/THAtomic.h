@@ -4,10 +4,23 @@
 #include "THGeneral.h"
 
 /*
+ * return *a
+*/
+TH_API int THAtomicGet(int volatile *a);
+
+/*
  * *a += value,
  * return previous *a
 */
 TH_API int THAtomicAdd(int volatile *a, int value);
+
+/*
+ * check if (*a == oldvalue)
+ * if true: set *a to newvalue, return 1
+ * if false: return 0
+*/
+TH_API int THAtomicCompareAndSwap(int volatile *a, int oldvalue, int newvalue);
+
 
 /******************************************************************************
  * refcounting functions
