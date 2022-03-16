@@ -74,10 +74,17 @@ void THPUtils_setError(const char *format, ...)
 }
 
 template<>
+void THPPointer<THPGenerator>::free() {
+  if (ptr)
+    Py_DECREF(ptr);
+}
+
+template<>
 void THPPointer<PyObject>::free() {
   if (ptr)
     Py_DECREF(ptr);
 }
 
+template class THPPointer<THPGenerator>;
 template class THPPointer<PyObject>;
 

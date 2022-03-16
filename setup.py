@@ -137,7 +137,7 @@ extra_link_args.append('-L' + lib_path)
 main_libraries = ['TH']
 main_sources = [
     "torch/csrc/Module.cpp",
-    # "torch/csrc/Generator.cpp",
+    "torch/csrc/Generator.cpp",
     "torch/csrc/Tensor.cpp",
     "torch/csrc/Storage.cpp",
     "torch/csrc/utils.cpp",

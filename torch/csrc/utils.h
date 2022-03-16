@@ -41,5 +41,6 @@ private:
 #include <TH/THGenerateAllTypes.h>
 
 typedef THPPointer<PyObject> THPObjectPtr;
+typedef THPPointer<THPGenerator> THPGeneratorPtr;
 
 #endif

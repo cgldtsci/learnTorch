@@ -18,6 +18,7 @@
 #define LIBRARY_STATE_NOARGS
 
 #include "Exceptions.h"
+#include "Generator.h"
 #include "Storage.h"
 #include "Tensor.h"
 #include "Module.h"

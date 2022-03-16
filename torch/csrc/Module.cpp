@@ -29,8 +29,8 @@ PyObject *THPByteTensorClass    = NULL;
 PyObject *THPDefaultTensorClass = NULL;
 PyObject *THPGeneratorClass     = NULL;
 
-//// Used if no other generator is provided
-//THPGenerator *THPDefaultGenerator   = NULL;
+// Used if no other generator is provided
+THPGenerator *THPDefaultGenerator   = NULL;
 
 static bool THPModule_loadClasses(PyObject *self)
 {
@@ -39,8 +39,7 @@ static bool THPModule_loadClasses(PyObject *self)
   if (!torch_module) {
     THPUtils_setError("class loader couldn't access torch module");
     return false;
-    }
-
+  }
   PyObject* module_dict = PyModule_GetDict(torch_module);
 
   ASSERT_NOT_NULL(tensor_classes = PyMapping_GetItemString(module_dict, (char*)"_tensor_classes"));
@@ -64,10 +63,9 @@ static bool THPModule_loadClasses(PyObject *self)
   THPDefaultTensorClass = THPDoubleTensorClass;
 
   return true;
-
 #undef ASSERT_NOT_NULL
-
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Copy handlers
@@ -116,14 +114,41 @@ IMPLEMENT_COPY_WITH_WRAPPER(storage)
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
+static bool THPModule_assignStateless(PyObject *self)
+{
+#define INIT_STATELESS(type)                                                   \
+  stateless = PyObject_Call((PyObject*)&TH_CONCAT_2(type, TensorStatelessType), arg, NULL); \
+  if (!stateless) {                                                            \
+    THPUtils_setError("stateless method initialization error");                \
+    return false;                                                              \
+  }                                                                            \
+  if (PyObject_SetAttrString(TH_CONCAT_3(THP,type,TensorClass), STATELESS_ATTRIBUTE_NAME, stateless) == -1) { \
+    THPUtils_setError("stateless method initialization error (on assignment)");\
+  }
+  PyObject *arg = PyTuple_New(0);
+  PyObject *stateless;
+  INIT_STATELESS(Double);
+  INIT_STATELESS(Float);
+  INIT_STATELESS(Long);
+  INIT_STATELESS(Int);
+  INIT_STATELESS(Short);
+  INIT_STATELESS(Char);
+  INIT_STATELESS(Byte);
+  Py_DECREF(arg);
+  return true;
+#undef INIT_STATELESS
+}
+
 // Callback for python part. Used for additional initialization of python classes
 static PyObject * THPModule_initExtension(PyObject *self)
 {
   if (!THPModule_loadClasses(self))         return NULL;
+  if (!THPModule_assignStateless(self))     return NULL;
   if (!THPModule_initCopy(self))            return NULL;
 
   return PyBool_FromLong(true);
 }
+
 static PyObject * THPModule_getNumThreads(PyObject *module)
 {
 #ifdef _OPENMP
@@ -133,9 +158,41 @@ static PyObject * THPModule_getNumThreads(PyObject *module)
 #endif
 }
 
+static PyObject * THPModule_setNumThreads(PyObject *module, PyObject *arg)
+{
+  if (!THPUtils_checkLong(arg))
+    return NULL;
+  // TODO: maybe throw an error to let people know it's a noop? or a warning?
+#ifdef _OPENMP
+  omp_set_num_threads(THPUtils_getLong(arg));
+#endif
+  return 0;
+}
+
+//
+//static PyObject * THPModule_getRNGState(PyObject *module, PyObject *args)
+//{
+//  THGenerator *generator = THPDefaultGenerator->cdata;
+//  if (args && PyTuple_Size(args) == 1 && THPGenerator_Check(PyTuple_GET_ITEM(args, 0))) {
+//    generator = ((THPGenerator*)PyTuple_GET_ITEM(args, 0))->cdata;
+//  } else if (args && PyTuple_Size(args) > 0) {
+//    // TODO: better error message
+//    THPUtils_setError("invalid arguments");
+//    return NULL;
+//  }
+//  THByteTensorPtr _t = THByteTensor_new();
+//  THByteTensor_getRNGState(generator, _t.get());
+//  PyObject *_ret =  THPByteTensor_newObject(_t);
+//  _t.release();
+//  return _ret;
+//}
+
+
 static PyMethodDef TorchMethods[] = {
 
   {"_initExtension",  (PyCFunction)THPModule_initExtension,     METH_NOARGS,  NULL},
+  {"_tensorCopy",     (PyCFunction)THPModule_tensorCopyWrapper, METH_VARARGS, NULL},
+  {"_storageCopy",    (PyCFunction)THPModule_storageCopyWrapper, METH_VARARGS, NULL},
   {"getNumThreads",   (PyCFunction)THPModule_getNumThreads,     METH_NOARGS,  NULL},
   {NULL, NULL, 0, NULL}
 
@@ -151,6 +208,21 @@ static struct PyModuleDef torchmodule = {
 };
 #endif
 
+static void errorHandler(const char *msg, void *data)
+{
+  throw THException(msg);
+}
+
+static void errorHandlerArg(int argNumber, const char *msg, void *data)
+{
+  throw THArgException(msg, argNumber);
+}
+
+static void updateErrorHandlers()
+{
+  THSetErrorHandler(errorHandler, NULL);
+  THSetArgErrorHandler(errorHandlerArg, NULL);
+}
 
 #if PY_MAJOR_VERSION == 2
 PyMODINIT_FUNC init_C()
@@ -170,6 +242,7 @@ PyMODINIT_FUNC PyInit__C()
 #else
   ASSERT_TRUE(module = PyModule_Create(&torchmodule));
 #endif
+  ASSERT_TRUE(THPGenerator_init(module));
 
   ASSERT_TRUE(THPDoubleStorage_init(module));
   ASSERT_TRUE(THPFloatStorage_init(module));
@@ -186,6 +259,11 @@ PyMODINIT_FUNC PyInit__C()
   ASSERT_TRUE(THPShortTensor_init(module));
   ASSERT_TRUE(THPCharTensor_init(module));
   ASSERT_TRUE(THPByteTensor_init(module));
+
+  THPDefaultGenerator = (THPGenerator*)THPGenerator_newObject();
+  ASSERT_TRUE(THPDefaultGenerator != nullptr);
+
+  updateErrorHandlers();
 
 #if PY_MAJOR_VERSION == 2
 #else
