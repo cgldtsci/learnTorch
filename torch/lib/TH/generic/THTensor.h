@@ -20,6 +20,9 @@ typedef struct THTensor
 
 } THTensor;
 
+/**** access methods ****/
+TH_API real *THTensor_(data)(const THTensor *self);
+
 /**** creation methods ****/
 TH_API THTensor *THTensor_(new)(void);
 TH_API THTensor *THTensor_(newWithTensor)(THTensor *tensor);
@@ -30,5 +33,12 @@ TH_API THTensor *THTensor_(newWithStorage)(THStorage *storage_, long storageOffs
 /* stride might be NULL */
 TH_API THTensor *THTensor_(newWithSize)(THLongStorage *size_, THLongStorage *stride_);
 TH_API void THTensor_(free)(THTensor *self);
+
+TH_API int THTensor_(isContiguous)(const THTensor *self);
+
+TH_API void THTensor_(resize1d)(THTensor *tensor, long size0_);
+TH_API void THTensor_(resize4d)(THTensor *tensor, long size0_, long size1_, long size2_, long size3_);
+
+TH_API long THTensor_(nElement)(const THTensor *self);
 
 #endif

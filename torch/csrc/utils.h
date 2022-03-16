@@ -3,17 +3,20 @@
 
 #define THPUtils_(NAME) TH_CONCAT_4(THP,Real,Utils_,NAME)
 
+#define THPUtils_assert(cond, ...)                                             \
+if (!(cond)) { THPUtils_setError(__VA_ARGS__); return NULL; }
+
+bool THPUtils_checkLong(PyObject *index);
+int THPUtils_getLong(PyObject *index, long *result);
+long THPUtils_unpackLong(PyObject *index);
+THLongStorage * THPUtils_getLongStorage(PyObject *args, int ignore_first=0);
+
 void THPUtils_setError(const char *format, ...);
 
 #define THStoragePtr TH_CONCAT_3(TH,Real,StoragePtr)
 #define THTensorPtr  TH_CONCAT_3(TH,Real,TensorPtr)
 #define THPStoragePtr TH_CONCAT_3(THP,Real,StoragePtr)
 #define THPTensorPtr  TH_CONCAT_3(THP,Real,TensorPtr)
-
-bool THPUtils_checkLong(PyObject *index);
-int THPUtils_getLong(PyObject *index, long *result);
-long THPUtils_unpackLong(PyObject *index);
-THLongStorage * THPUtils_getLongStorage(PyObject *args, int ignore_first=0);
 
 template<class T>
 class THPPointer {

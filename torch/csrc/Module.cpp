@@ -169,31 +169,195 @@ static PyObject * THPModule_setNumThreads(PyObject *module, PyObject *arg)
   return 0;
 }
 
-//
-//static PyObject * THPModule_getRNGState(PyObject *module, PyObject *args)
-//{
-//  THGenerator *generator = THPDefaultGenerator->cdata;
-//  if (args && PyTuple_Size(args) == 1 && THPGenerator_Check(PyTuple_GET_ITEM(args, 0))) {
-//    generator = ((THPGenerator*)PyTuple_GET_ITEM(args, 0))->cdata;
-//  } else if (args && PyTuple_Size(args) > 0) {
-//    // TODO: better error message
-//    THPUtils_setError("invalid arguments");
-//    return NULL;
-//  }
-//  THByteTensorPtr _t = THByteTensor_new();
-//  THByteTensor_getRNGState(generator, _t.get());
-//  PyObject *_ret =  THPByteTensor_newObject(_t);
-//  _t.release();
-//  return _ret;
-//}
+static PyObject * THPModule_getRNGState(PyObject *module, PyObject *args)
+{
+  THGenerator *generator = THPDefaultGenerator->cdata;
+  if (args && PyTuple_Size(args) == 1 && THPGenerator_Check(PyTuple_GET_ITEM(args, 0))) {
+    generator = ((THPGenerator*)PyTuple_GET_ITEM(args, 0))->cdata;
+  } else if (args && PyTuple_Size(args) > 0) {
+    // TODO: better error message
+    THPUtils_setError("invalid arguments");
+    return NULL;
+  }
+  THByteTensorPtr _t = THByteTensor_new();
+  THByteTensor_getRNGState(generator, _t.get());
+  PyObject *_ret =  THPByteTensor_newObject(_t);
+  _t.release();
+  return _ret;
+}
+
+static PyObject * THPModule_setRNGState(PyObject *module, PyObject *args)
+{
+  THGenerator *generator = THPDefaultGenerator->cdata;
+  THByteTensor *new_state = NULL;
+  bool args_ok = false;
+  if (args && PyTuple_Size(args) > 0) {
+    PyObject *first_arg = PyTuple_GET_ITEM(args, 0);
+
+    if (THPGenerator_Check(first_arg)) {
+      PyObject *second_arg = PyTuple_GET_ITEM(args, 1);
+      if (THPByteTensor_IsSubclass(second_arg)) {
+        new_state = ((THPByteTensor*)second_arg)->cdata;
+        args_ok = PyTuple_Size(args) == 2;
+      }
+    } else if (THPByteTensor_IsSubclass(first_arg)) {
+      new_state = ((THPByteTensor*)first_arg)->cdata;
+      args_ok = PyTuple_Size(args) == 1;
+    }
+  }
+  if (!args_ok) {
+    THPUtils_setError("invalid arguments");
+    return NULL;
+  }
+  THByteTensor_setRNGState(generator, new_state);
+  Py_RETURN_NONE;
+}
+
+
+static PyObject * THPModule_manualSeed(PyObject *module, PyObject *args)
+{
+  THGenerator *generator = THPDefaultGenerator->cdata;
+  long new_seed;
+  bool args_ok = false;
+  if (args && PyTuple_Size(args) > 0) {
+    PyObject *first_arg = PyTuple_GET_ITEM(args, 0);
+
+    if (THPGenerator_Check(first_arg)) {
+      PyObject *second_arg = PyTuple_GET_ITEM(args, 1);
+      if (THPUtils_checkLong(second_arg)) {
+        THPUtils_getLong(second_arg, &new_seed);
+        args_ok = PyTuple_Size(args) == 2;
+      }
+    } else if (THPUtils_checkLong(first_arg)) {
+      THPUtils_getLong(first_arg, &new_seed);
+      args_ok = PyTuple_Size(args) == 1;
+    }
+  }
+
+  if (!args_ok) {
+    // TODO: better error message
+    THPUtils_setError("invalid arguments");
+    return NULL;
+  }
+  THRandom_manualSeed(generator, new_seed);
+  Py_RETURN_NONE;
+}
+
+bool THPModule_isTensor(PyObject *obj)
+{
+  int result = PySet_Contains(tensor_classes, (PyObject*)Py_TYPE(obj));
+  if (result == -1)
+    throw std::logic_error("FATAL: tensor_classes isn't a set!");
+  return result;
+}
+
+#define IMPLEMENT_STATELESS(name)                                              \
+static PyObject * TH_CONCAT_2(THPModule_, name)(PyObject *_unused, PyObject *args) \
+{                                                                              \
+  PyObject *tensor = THPDefaultTensorClass;                                    \
+  for (int i = 0; i < PyTuple_Size(args); i++) {                               \
+    PyObject *item = PyTuple_GET_ITEM(args, i);                                \
+    if (THPModule_isTensor(item)) {                                            \
+      tensor = item;                                                           \
+      break;                                                                   \
+    }                                                                          \
+  }                                                                            \
+                                                                               \
+  PyObject *methods = PyObject_GetAttrString(tensor, STATELESS_ATTRIBUTE_NAME);     \
+  THPUtils_assert(methods, "Type %s doesn't implement statless methods",       \
+      Py_TYPE(tensor)->tp_name);                                               \
+  PyObject *method = PyObject_GetAttrString(methods, #name);                   \
+  THPUtils_assert(method, "Type %s doesn't implement stateless method " #name, \
+      Py_TYPE(tensor)->tp_name);                                               \
+  return PyObject_Call(method, args, NULL);                                    \
+}
+
+
+// For logical functions a reverse type search is required (if the first argument
+// is a ByteTensor (result), it shouldn't pick it's version).
+#define IMPLEMENT_STATELESS_REVERSED(name)                                     \
+static PyObject * TH_CONCAT_2(THPModule_, name)(PyObject *_unused, PyObject *args) \
+{                                                                              \
+  PyObject *tensor = THPDefaultTensorClass;                                    \
+  for (int i = PyTuple_Size(args)-1; i >= 0; i--) {                            \
+    PyObject *item = PyTuple_GET_ITEM(args, i);                                \
+    if (THPModule_isTensor(item)) {                                            \
+      tensor = item;                                                           \
+      break;                                                                   \
+    }                                                                          \
+  }                                                                            \
+                                                                               \
+  PyObject *methods = PyObject_GetAttrString(tensor, STATELESS_ATTRIBUTE_NAME);     \
+  THPUtils_assert(methods, "Type %s doesn't implement statless methods",       \
+      Py_TYPE(tensor)->tp_name);                                               \
+  PyObject *method = PyObject_GetAttrString(methods, #name);                   \
+  THPUtils_assert(method, "Type %s doesn't implement stateless method " #name, \
+      Py_TYPE(tensor)->tp_name);                                               \
+  return PyObject_Call(method, args, NULL);                                    \
+}
+
+// In nonzero, the first argument might be a LongTensor that will be used
+// for indices output, so we should pick a function based on second
+// tensor's type.
+static PyObject * THPModule_nonzero(PyObject *_unused, PyObject *args)
+{
+  PyObject *tensor = THPDefaultTensorClass;
+  if (PyTuple_Size(args) == 1)
+    tensor = PyTuple_GET_ITEM(args, 0);
+  else if (PyTuple_Size(args) == 2)
+    tensor = PyTuple_GET_ITEM(args, 1);
+
+  PyObject *methods = PyObject_GetAttrString(tensor, STATELESS_ATTRIBUTE_NAME);
+  THPUtils_assert(methods, "Type %s doesn't implement statless methods",
+      Py_TYPE(tensor)->tp_name);
+  PyObject *method = PyObject_GetAttrString(methods, "nonzero");
+  THPUtils_assert(method, "Type %s doesn't implement stateless method nonzero",
+      Py_TYPE(tensor)->tp_name);
+  return PyObject_Call(method, args, NULL);
+}
+
+// In nonzero, the first argument might be a LongTensor that will be used
+// for indices output, so we should pick a function based on second
+// tensor's type.
+static PyObject * THPModule_cat(PyObject *_unused, PyObject *args)
+{
+  PyObject *tensor = THPDefaultTensorClass;
+  THPObjectPtr iterator;
+  THPObjectPtr item;
+  if (args && PyTuple_Size(args) > 0) {
+    if (THPModule_isTensor(PyTuple_GET_ITEM(args, 0))) {
+      tensor = PyTuple_GET_ITEM(args, 0);
+    } else if ((iterator = PyObject_GetIter(PyTuple_GET_ITEM(args, 0)))) {
+      item = PyIter_Next(iterator);
+      if (item && THPModule_isTensor(item)) {
+        tensor = item;
+      }
+    }
+    PyErr_Clear();
+  }
+
+  PyObject *methods = PyObject_GetAttrString(tensor, STATELESS_ATTRIBUTE_NAME);
+  THPUtils_assert(methods, "Type %s doesn't implement statless methods",
+      Py_TYPE(tensor)->tp_name);
+  PyObject *method = PyObject_GetAttrString(methods, "cat");
+  THPUtils_assert(method, "Type %s doesn't implement stateless method nonzero",
+      Py_TYPE(tensor)->tp_name);
+  return PyObject_Call(method, args, NULL);
+}
 
 
 static PyMethodDef TorchMethods[] = {
 
   {"_initExtension",  (PyCFunction)THPModule_initExtension,     METH_NOARGS,  NULL},
+
   {"_tensorCopy",     (PyCFunction)THPModule_tensorCopyWrapper, METH_VARARGS, NULL},
   {"_storageCopy",    (PyCFunction)THPModule_storageCopyWrapper, METH_VARARGS, NULL},
   {"getNumThreads",   (PyCFunction)THPModule_getNumThreads,     METH_NOARGS,  NULL},
+  {"setNumThreads",   (PyCFunction)THPModule_setNumThreads,     METH_O,       NULL},
+  {"getRNGState",     (PyCFunction)THPModule_getRNGState,       METH_VARARGS, NULL},
+  {"setRNGState",     (PyCFunction)THPModule_setRNGState,       METH_VARARGS, NULL},
+  {"manualSeed",      (PyCFunction)THPModule_manualSeed,        METH_VARARGS, NULL},
+
   {NULL, NULL, 0, NULL}
 
 };

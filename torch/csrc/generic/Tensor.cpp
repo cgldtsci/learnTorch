@@ -4,6 +4,18 @@
 
 extern PyObject *THPTensorClass;
 
+extern PyObject *THPTensorClass;
+PyObject * THPTensor_(newObject)(THTensor *ptr)
+{
+  // TODO: error checking
+  PyObject *args = PyTuple_New(0);
+  PyObject *kwargs = Py_BuildValue("{s:K}", "cdata", (unsigned long long) ptr);
+  PyObject *instance = PyObject_Call(THPTensorClass, args, kwargs);
+  Py_DECREF(args);
+  Py_DECREF(kwargs);
+  return instance;
+}
+
 bool THPTensor_(IsSubclass)(PyObject *tensor)
 {
   return PyObject_IsSubclass((PyObject*)Py_TYPE(tensor), (PyObject*)&THPTensorType);

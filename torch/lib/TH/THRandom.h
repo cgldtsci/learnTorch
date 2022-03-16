@@ -29,6 +29,9 @@ TH_API THGenerator * THGenerator_new(void);
 TH_API THGenerator * THGenerator_copy(THGenerator *self, THGenerator *from);
 TH_API void THGenerator_free(THGenerator *gen);
 
+/* Checks if given generator is valid */
+TH_API int THGenerator_isValid(THGenerator *_generator);
+
 /* Initializes the random number generator from /dev/urandom (or on Windows
 platforms with the current time (granularity: seconds)) and returns the seed. */
 TH_API unsigned long THRandom_seed(THGenerator *_generator);

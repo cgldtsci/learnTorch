@@ -68,6 +68,11 @@ PyTypeObject THPGeneratorType = {
   THPGenerator_pynew,                    /* tp_new */
 };
 
+bool THPGenerator_Check(PyObject *obj)
+{
+  return Py_TYPE(obj) == &THPGeneratorType;
+}
+
 PyObject * THPGenerator_newObject()
 {
   // TODO: error checking

@@ -2,6 +2,17 @@
 #define TH_GENERIC_FILE "generic/THTensor.c"
 #else
 
+/**** access methods ****/
+
+real *THTensor_(data)(const THTensor *self)
+{
+  if(self->storage)
+    return (self->storage->data+self->storageOffset);
+  else
+    return NULL;
+}
+
+
 /**** creation methods ****/
 
 static void THTensor_(rawInit)(THTensor *self);
@@ -180,4 +191,46 @@ static void THTensor_(rawResize)(THTensor *self, int nDimension, long *size, lon
     self->nDimension = 0;
 }
 
+void THTensor_(resize1d)(THTensor *tensor, long size0)
+{
+  THTensor_(resize4d)(tensor, size0, -1, -1, -1);
+}
+
+void THTensor_(resize4d)(THTensor *self, long size0, long size1, long size2, long size3)
+{
+  long size[4] = {size0, size1, size2, size3};
+
+  THTensor_(rawResize)(self, 4, size, NULL);
+}
+
+int THTensor_(isContiguous)(const THTensor *self)
+{
+  long z = 1;
+  int d;
+  for(d = self->nDimension-1; d >= 0; d--)
+  {
+    if(self->size[d] != 1)
+    {
+      if(self->stride[d] == z)
+        z *= self->size[d];
+      else
+        return 0;
+    }
+  }
+  return 1;
+}
+
+long THTensor_(nElement)(const THTensor *self)
+{
+  if(self->nDimension == 0)
+    return 0;
+  else
+  {
+    long nElement = 1;
+    int d;
+    for(d = 0; d < self->nDimension; d++)
+      nElement *= self->size[d];
+    return nElement;
+  }
+}
 #endif

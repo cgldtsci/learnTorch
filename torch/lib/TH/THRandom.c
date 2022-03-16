@@ -40,6 +40,16 @@ void THGenerator_free(THGenerator *self)
   THFree(self);
 }
 
+int THGenerator_isValid(THGenerator *_generator)
+{
+  if ((_generator->seeded == 1) &&
+    (_generator->left > 0 && _generator->left <= n) && (_generator->next <= n))
+    return 1;
+
+  return 0;
+}
+
+
 #ifndef _WIN32
 static unsigned long readURandomLong()
 {

@@ -349,8 +349,8 @@ INSTALL(FILES
 #   generic/THTensorLapack.h
 #   generic/THTensorMath.c
 #   generic/THTensorMath.h
-#   generic/THTensorRandom.c
-#   generic/THTensorRandom.h
+   generic/THTensorRandom.c
+   generic/THTensorRandom.h
 #   generic/THVector.c
    DESTINATION "${TH_INSTALL_INCLUDE_SUBDIR}/TH/generic")
 
