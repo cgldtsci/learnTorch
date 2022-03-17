@@ -12,6 +12,11 @@ long THStorage_(size)(const THStorage *self)
   return self->size;
 }
 
+int THStorage_(elementSize)()
+{
+  return sizeof(real);
+}
+
 void THStorage_(retain)(THStorage *storage)
 {
   if(storage && (storage->flag & TH_STORAGE_REFCOUNTED))
@@ -119,6 +124,19 @@ void THStorage_(resize)(THStorage *storage, long size)
   } else {
     THError("Trying to resize storage that is not resizable");
   }
+}
+
+void THStorage_(fill)(THStorage *storage, real value)
+{
+  long i;
+  for(i = 0; i < storage->size; i++)
+    storage->data[i] = value;
+}
+
+void THStorage_(set)(THStorage *self, long idx, real value)
+{
+  THArgCheck((idx >= 0) && (idx < self->size), 2, "out of bounds");
+  self->data[idx] = value;
 }
 
 real THStorage_(get)(const THStorage *self, long idx)

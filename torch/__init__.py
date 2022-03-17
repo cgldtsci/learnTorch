@@ -14,16 +14,12 @@ def _import_dotted_name(name):
         obj = getattr(obj, component)
     return obj
 
-def getDefaultTensorType():
-    return _defaultTensorTypeName
-
 # range gets shadowed by torch.range
 def _pyrange(*args, **kwargs):
     return __builtins__['range'](*args, **kwargs)
 
 def typename(o):
-    # return o.__module__ + "." + o.__class__.__name__
-    return "." + o.__class__.__name__
+    return o.__module__ + "." + o.__class__.__name__
 
 def isTensor(obj):
     return obj.__class__ in _tensor_classes

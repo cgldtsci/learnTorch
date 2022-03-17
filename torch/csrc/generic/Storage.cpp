@@ -21,6 +21,12 @@ bool THPStorage_(IsSubclass)(PyObject *storage)
   return PyObject_IsSubclass((PyObject*)Py_TYPE(storage), (PyObject*)&THPStorageType);
 }
 
+static void THPStorage_(dealloc)(THPStorage* self)
+{
+  THStorage_(free)(LIBRARY_STATE self->cdata);
+  Py_TYPE(self)->tp_free((PyObject*)self);
+}
+
 static PyObject * THPStorage_(pynew)(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
   HANDLE_TH_ERRORS
@@ -182,19 +188,51 @@ static PyObject * THPStorage_(get)(THPStorage *self, PyObject *index)
   END_HANDLE_TH_ERRORS
 }
 
+static int THPStorage_(set)(THPStorage *self, PyObject *index, PyObject *value)
+{
+  HANDLE_TH_ERRORS
+  real rvalue;
+  if (!THPUtils_(parseReal)(value, &rvalue))
+    return -1;
+
+  long nindex;
+  if ((PyLong_Check(index) || PyInt_Check(index))
+      && THPUtils_getLong(index, &nindex) == 1) {
+    THStorage_(set)(LIBRARY_STATE self->cdata, nindex, rvalue);
+    return 0;
+  } else if (PySlice_Check(index)) {
+    Py_ssize_t start, stop, len;
+    len = THStorage_(size)(LIBRARY_STATE self->cdata);
+    if (!THPUtils_(parseSlice)(index, len, &start, &stop, NULL))
+      return -1;
+    // TODO: check the bounds only once
+    for (;start < stop; start++)
+      THStorage_(set)(LIBRARY_STATE self->cdata, start, rvalue);
+    return 0;
+  }
+  char err_string[512];
+  snprintf (err_string, 512, "%s %s",
+      "Only indexing with integers and slices supported, but got type: ",
+      index->ob_type->tp_name);
+  PyErr_SetString(PyExc_RuntimeError, err_string);
+  return -1;
+  END_HANDLE_TH_ERRORS_RET(-1)
+}
+
 static PyMappingMethods THPStorage_(mappingmethods) = {
   (lenfunc)THPStorage_(length),
   (binaryfunc)THPStorage_(get),
-};
+  (objobjargproc)THPStorage_(set)
 
+};
 
 // TODO: implement equality
 PyTypeObject THPStorageType = {
   PyVarObject_HEAD_INIT(NULL, 0)
   "torch._C." THPStorageBaseStr,         /* tp_name */
-  NULL,                    /* tp_basicsize */
+  sizeof(THPStorage),                    /* tp_basicsize */
   0,                                     /* tp_itemsize */
-  NULL,      /* tp_dealloc */
+  (destructor)THPStorage_(dealloc),      /* tp_dealloc */
   0,                                     /* tp_print */
   0,                                     /* tp_getattr */
   0,                                     /* tp_setattr */
@@ -217,8 +255,8 @@ PyTypeObject THPStorageType = {
   0,                                     /* tp_weaklistoffset */
   0,                                     /* tp_iter */
   0,                                     /* tp_iternext */
-  NULL,   /* will be assigned in init */    /* tp_methods */
-  NULL,   /* will be assigned in init */    /* tp_members */
+  0,   /* will be assigned in init */    /* tp_methods */
+  0,   /* will be assigned in init */    /* tp_members */
   0,                                     /* tp_getset */
   0,                                     /* tp_base */
   0,                                     /* tp_dict */
@@ -230,10 +268,17 @@ PyTypeObject THPStorageType = {
   THPStorage_(pynew),                    /* tp_new */
 };
 
+static struct PyMemberDef THPStorage_(members)[] = {
+  {(char*)"_cdata", T_ULONGLONG, offsetof(THPStorage, cdata), READONLY, NULL},
+  {NULL}
+};
+
+#include "StorageMethods.cpp"
+
 bool THPStorage_(init)(PyObject *module)
 {
-//  THPStorageType.tp_methods = THPStorage_(methods);
-//  THPStorageType.tp_members = THPStorage_(members);
+  THPStorageType.tp_methods = THPStorage_(methods);
+  THPStorageType.tp_members = THPStorage_(members);
   if (PyType_Ready(&THPStorageType) < 0)
     return false;
   Py_INCREF(&THPStorageType);

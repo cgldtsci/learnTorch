@@ -23,5 +23,6 @@
 #include "Tensor.h"
 #include "Module.h"
 #include "utils.h" // This requires defined Storage and Tensor types
+#include "serialization.h"
 
 #endif

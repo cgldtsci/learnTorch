@@ -141,7 +141,7 @@ main_sources = [
     "torch/csrc/Tensor.cpp",
     "torch/csrc/Storage.cpp",
     "torch/csrc/utils.cpp",
-    # "torch/csrc/serialization.cpp",
+    "torch/csrc/serialization.cpp",
 ]
 
 # try:
