@@ -21,6 +21,12 @@ bool THPTensor_(IsSubclass)(PyObject *tensor)
   return PyObject_IsSubclass((PyObject*)Py_TYPE(tensor), (PyObject*)&THPTensorType);
 }
 
+static void THPTensor_(dealloc)(THPTensor* self)
+{
+  THTensor_(free)(LIBRARY_STATE self->cdata);
+  Py_TYPE(self)->tp_free((PyObject*)self);
+}
+
 static PyObject * THPTensor_(pynew)(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
   HANDLE_TH_ERRORS
@@ -198,9 +204,9 @@ static PyObject * THPTensor_(pynew)(PyTypeObject *type, PyObject *args, PyObject
 PyTypeObject THPTensorType = {
   PyVarObject_HEAD_INIT(NULL, 0)
   "torch._C." THPTensorBaseStr,          /* tp_name */
-  NULL,                     /* tp_basicsize */
+  sizeof(THPTensor),                     /* tp_basicsize */
   0,                                     /* tp_itemsize */
-  NULL,       /* tp_dealloc */
+  (destructor)THPTensor_(dealloc),       /* tp_dealloc */
   0,                                     /* tp_print */
   0,                                     /* tp_getattr */
   0,                                     /* tp_setattr */
@@ -234,6 +240,11 @@ PyTypeObject THPTensorType = {
   0,                                     /* tp_init */
   0,                                     /* tp_alloc */
   THPTensor_(pynew),                     /* tp_new */
+};
+
+static struct PyMemberDef THPTensor_(members)[] = {
+  {(char*)"_cdata", T_ULONGLONG, offsetof(THPTensor, cdata), READONLY, NULL},
+  {NULL}
 };
 
 typedef struct {
@@ -289,11 +300,10 @@ PyTypeObject THPTensorStatelessType = {
   0,                                     /* tp_weaklist */
 };
 
-
 bool THPTensor_(init)(PyObject *module)
 {
-//  THPTensorType.tp_methods = THPTensor_(methods);
-//  THPTensorType.tp_members = THPTensor_(members);
+  THPTensorType.tp_methods = THPTensor_(methods);
+  THPTensorType.tp_members = THPTensor_(members);
   if (PyType_Ready(&THPTensorType) < 0)
     return false;
   THPTensorStatelessType.tp_new = PyType_GenericNew;
