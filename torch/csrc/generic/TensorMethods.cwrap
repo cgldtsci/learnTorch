@@ -1,6 +1,35 @@
+
+// TODO: check that there are no args
+[[
+  name: THPTensor_(storage)
+  python_name: storage
+  only_register: True
+]]
+static PyObject * THPTensor_(storage)(THPTensor *self, PyObject *args)
+{
+  // TODO: memory leak on error
+  THStorage *result = THTensor_(storage)(LIBRARY_STATE self->cdata);
+  if (result == NULL)
+    Py_RETURN_NONE;
+  THStorage_(retain)(LIBRARY_STATE result);
+  THStoragePtr _tmp = result;
+  PyObject *ret = THPStorage_(newObject)(result);
+  _tmp.release();
+  return ret;
+}
+
 [[
   name: nDimension
   return: long
   arguments:
+    - THTensor* self
+]]
+
+[[
+  name: abs
+  return: argument 0
+  arguments:
+    - arg: THTensor* destination
+      allocate: True
     - THTensor* self
 ]]

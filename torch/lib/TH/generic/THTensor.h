@@ -22,6 +22,8 @@ typedef struct THTensor
 
 /**** access methods ****/
 TH_API real *THTensor_(data)(const THTensor *self);
+TH_API int THTensor_(nDimension)(const THTensor *self);
+TH_API THStorage* THTensor_(storage)(const THTensor *self);
 
 /**** creation methods ****/
 TH_API THTensor *THTensor_(new)(void);

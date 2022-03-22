@@ -73,6 +73,32 @@ void THPUtils_setError(const char *format, ...)
   PyErr_SetString(PyExc_RuntimeError, buffer);
 }
 
+
+void THPUtils_invalidArguments(PyObject *given_args, const char *expected_args_desc) {
+  static const std::string PREFIX = "Invalid arguments! Got ";
+  std::string error_msg;
+  error_msg.reserve(2000);
+  error_msg += PREFIX;
+
+  // TODO: assert that args is a tuple?
+  Py_ssize_t num_args = PyTuple_Size(given_args);
+  if (num_args == 0) {
+    error_msg += "no arguments";
+  } else {
+    error_msg += "(";
+    for (int i = 0; i < num_args; i++) {
+      PyObject *arg = PyTuple_GET_ITEM(given_args, i);
+      if (i > 0)
+        error_msg += ", ";
+      error_msg += Py_TYPE(arg)->tp_name;
+    }
+    error_msg += ")";
+  }
+  error_msg += ", but expected ";
+  error_msg += expected_args_desc;
+  PyErr_SetString(PyExc_ValueError, error_msg.c_str());
+}
+
 template<>
 void THPPointer<THPGenerator>::free() {
   if (ptr)

@@ -3,6 +3,10 @@
 #else
 
 /**** access methods ****/
+THStorage *THTensor_(storage)(const THTensor *self)
+{
+  return self->storage;
+}
 
 real *THTensor_(data)(const THTensor *self)
 {
@@ -12,6 +16,10 @@ real *THTensor_(data)(const THTensor *self)
     return NULL;
 }
 
+int THTensor_(nDimension)(const THTensor *self)
+{
+  return self->nDimension;
+}
 
 /**** creation methods ****/
 

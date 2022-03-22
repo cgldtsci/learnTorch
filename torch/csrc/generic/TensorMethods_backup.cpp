@@ -197,20 +197,6 @@ static PyObject * THPTensor_(elementSize)(THPTensor *self, PyObject *args)
   return PyLong_FromLong(THStorage_(elementSize)(LIBRARY_STATE_NOARGS));
 }
 
-// TODO: check that there are no args
-static PyObject * THPTensor_(storage)(THPTensor *self, PyObject *args)
-{
-  // TODO: memory leak on error
-  THStorage *result = THTensor_(storage)(LIBRARY_STATE self->cdata);
-  if (result == NULL)
-    Py_RETURN_NONE;
-  THStorage_(retain)(LIBRARY_STATE result);
-  THStoragePtr _tmp = result;
-  PyObject *ret = THPStorage_(newObject)(result);
-  _tmp.release();
-  return ret;
-}
-
 PyObject * THPTensor_(storageOffset)(PyObject *self, PyObject *args)
 {
     HANDLE_TH_ERRORS
@@ -224,28 +210,6 @@ PyObject * THPTensor_(storageOffset)(PyObject *self, PyObject *args)
       #endif
       
       return PyInt_FromLong(THTensor_(storageOffset)(LIBRARY_STATE ((THPTensor*)self)->cdata));
-    
-    } else {
-      THPUtils_invalidArguments(args, "no arguments");
-      return NULL;
-    }
-    END_HANDLE_TH_ERRORS
-}
-
-
-PyObject * THPTensor_(nDimension)(PyObject *self, PyObject *args)
-{
-    HANDLE_TH_ERRORS
-    int __argcount = args ? PyTuple_Size(args) : 0;
-    
-    if (__argcount == 0) {
-
-      
-      #if IS_CUDA
-      THCPAutoGPU __autogpu_guard = THCPAutoGPU(args, (PyObject*)self);
-      #endif
-      
-      return PyInt_FromLong(THTensor_(nDimension)(LIBRARY_STATE ((THPTensor*)self)->cdata));
     
     } else {
       THPUtils_invalidArguments(args, "no arguments");

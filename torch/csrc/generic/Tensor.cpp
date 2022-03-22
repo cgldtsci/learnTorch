@@ -5,6 +5,9 @@
 extern PyObject *THPTensorClass;
 
 extern PyObject *THPTensorClass;
+
+#include "TensorMethods.cpp"
+
 PyObject * THPTensor_(newObject)(THTensor *ptr)
 {
   // TODO: error checking

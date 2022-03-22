@@ -38,12 +38,12 @@ class cwrap(object):
     CALL_TEMPLATE = Template("$cname($arg_unpack)")
 
     DEFAULT_PLUGIN_CLASSES = [
-        # ArgcountChecker,
+        ArgcountChecker,
         # ConstantArguments,
         # OptionalArguments,
         # ArgumentReferences,
         # BeforeCall,
-        # ReturnArguments
+        ReturnArguments
     ]
 
     def __init__(self, source, destination=None, plugins=[], default_plugins=True):
@@ -62,10 +62,10 @@ class cwrap(object):
             declarations = f.read()
 
         wrapper = self.wrap_declarations(declarations)
-        print('check1',wrapper)
+        # print('check1',wrapper)
         for plugin in self.plugins:
             wrapper = plugin.process_full_file(wrapper)
-        print('check2',wrapper)
+        # print('check2',wrapper)
 
         with open(destination, 'w') as f:
             f.write(wrapper)
@@ -168,7 +168,7 @@ class cwrap(object):
         wrapper = ''
         for i, option in enumerate(declaration['options']):
             option_wrapper = self.generate_option(option, is_first=(i == 0))
-            print(option_wrapper)
+            # print(option_wrapper)
             for plugin in self.plugins:
                 option_wrapper = plugin.process_option_code(option_wrapper, option)
             wrapper += option_wrapper

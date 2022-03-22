@@ -233,7 +233,8 @@ PyObject * $name(PyObject *self, PyObject *args)
     def process_full_file(self, code):
         # We have to find a place before all undefs
         idx = code.find('// PUT DEFINITIONS IN HERE PLEASE')
-        return code[:idx] + self.declare_methods(False) + self.declare_methods(True) + code[idx:]
+        # return code[:idx] + self.declare_methods(False) + self.declare_methods(True) + code[idx:]
+        return code[:idx] + self.declare_methods(False) + code[idx:]
 
     def preprocessor_guard(self, code, condition):
             return '#if ' + condition + '\n' + code + '#endif\n'
