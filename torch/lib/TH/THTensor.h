@@ -19,4 +19,8 @@
 #include "generic/THTensorRandom.h"
 #include "THGenerateAllTypes.h"
 
+/* maths */
+#include "generic/THTensorMath.h"
+#include "THGenerateAllTypes.h"
+
 #endif

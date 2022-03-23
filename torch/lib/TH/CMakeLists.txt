@@ -307,7 +307,7 @@ INSTALL(TARGETS TH
 INSTALL(FILES
   TH.h
   THAllocator.h
-#  THMath.h
+  THMath.h
 #  THBlas.h
 #  THDiskFile.h
 #  THFile.h
@@ -347,8 +347,8 @@ INSTALL(FILES
    generic/THTensorCopy.h
 #   generic/THTensorLapack.c
 #   generic/THTensorLapack.h
-#   generic/THTensorMath.c
-#   generic/THTensorMath.h
+   generic/THTensorMath.c
+   generic/THTensorMath.h
    generic/THTensorRandom.c
    generic/THTensorRandom.h
 #   generic/THVector.c

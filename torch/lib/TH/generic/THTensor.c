@@ -90,6 +90,12 @@ void THTensor_(free)(THTensor *self)
   }
 }
 
+/* Resize */
+void THTensor_(resizeAs)(THTensor *self, THTensor *src)
+{
+  if(!THTensor_(isSameSizeAs)(self, src))
+    THTensor_(rawResize)(self, src->nDimension, src->size, NULL);
+}
 
 /*******************************************************************************/
 
@@ -241,4 +247,18 @@ long THTensor_(nElement)(const THTensor *self)
     return nElement;
   }
 }
+
+int THTensor_(isSameSizeAs)(const THTensor *self, const THTensor* src)
+{
+  int d;
+  if (self->nDimension != src->nDimension)
+    return 0;
+  for(d = 0; d < self->nDimension; ++d)
+  {
+    if(self->size[d] != src->size[d])
+      return 0;
+  }
+  return 1;
+}
+
 #endif

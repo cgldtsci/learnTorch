@@ -33,7 +33,9 @@ TH_API THTensor *THTensor_(newWithTensor)(THTensor *tensor);
 TH_API THTensor *THTensor_(newWithStorage)(THStorage *storage_, long storageOffset_, THLongStorage *size_, THLongStorage *stride_);
 
 /* stride might be NULL */
+
 TH_API THTensor *THTensor_(newWithSize)(THLongStorage *size_, THLongStorage *stride_);
+TH_API void THTensor_(resizeAs)(THTensor *tensor, THTensor *src);
 TH_API void THTensor_(free)(THTensor *self);
 
 TH_API int THTensor_(isContiguous)(const THTensor *self);
@@ -42,5 +44,7 @@ TH_API void THTensor_(resize1d)(THTensor *tensor, long size0_);
 TH_API void THTensor_(resize4d)(THTensor *tensor, long size0_, long size1_, long size2_, long size3_);
 
 TH_API long THTensor_(nElement)(const THTensor *self);
+
+TH_API int THTensor_(isSameSizeAs)(const THTensor *self, const THTensor *src);
 
 #endif
