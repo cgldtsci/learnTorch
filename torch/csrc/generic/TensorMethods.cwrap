@@ -29,6 +29,7 @@ static PyObject * THPTensor_(storage)(THPTensor *self, PyObject *args)
   name: abs
   return: argument 0
   defined_if: defined(TH_REAL_IS_FLOAT) || defined(TH_REAL_IS_DOUBLE) || defined(TH_REAL_IS_LONG) || defined(TH_REAL_IS_INT) || CUDA_FLOAT
+  with_stateless: True
   arguments:
     - arg: THTensor* destination
       allocate: True

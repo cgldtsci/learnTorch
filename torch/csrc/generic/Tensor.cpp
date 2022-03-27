@@ -283,7 +283,7 @@ PyTypeObject THPTensorStatelessType = {
   0,                                     /* tp_weaklistoffset */
   0,                                     /* tp_iter */
   0,                                     /* tp_iternext */
-  0,         /* tp_methods */
+  THPTensor_stateless_(methods),         /* tp_methods */
   0,                                     /* tp_members */
   0,                                     /* tp_getset */
   0,                                     /* tp_base */

@@ -237,3 +237,43 @@ static PyMethodDef THPTensor_stateless_(methods)[] = {
   {NULL}
 };
 
+'abs' with stateless
+
+[{'name': 'THPTensor_(abs)',
+'return': 'argument 0',
+'defined_if': 'defined(TH_REAL_IS_FLOAT) || defined(TH_REAL_IS_DOUBLE) || defined(TH_REAL_IS_LONG) || defined(TH_REAL_IS_INT) || CUDA_FLOAT',
+'with_stateless': True,
+'cname': 'abs',
+'options': [
+{'arguments': [{'allocate': True, 'type': 'THTensor*', 'name': 'destination', 'ignore_check': True},
+{'type': 'THTensor*', 'name': 'self', 'ignore_check': True}],
+'return': 'argument 0',
+'defined_if': 'defined(TH_REAL_IS_FLOAT) || defined(TH_REAL_IS_DOUBLE) || defined(TH_REAL_IS_LONG) || defined(TH_REAL_IS_INT) || CUDA_FLOAT',
+'with_stateless': True,
+'cname': 'THTensor_(abs)'}
+], 'python_name': 'abs'},
+
+ {'name': 'THPTensor_stateless_(abs)',
+ 'return': 'argument 0',
+ 'defined_if': 'defined(TH_REAL_IS_FLOAT) || defined(TH_REAL_IS_DOUBLE) || defined(TH_REAL_IS_LONG) || defined(TH_REAL_IS_INT) || CUDA_FLOAT',
+ 'with_stateless': True,
+ 'cname': 'abs',
+ 'options': [
+    {'arguments': [
+        {'allocate': True, 'type': 'THTensor*', 'name': 'destination', 'ignore_check': True},
+        {'type': 'THTensor*', 'name': 'source'}],
+    'return': 'argument 0',
+    'defined_if': 'defined(TH_REAL_IS_FLOAT) || defined(TH_REAL_IS_DOUBLE) || defined(TH_REAL_IS_LONG) || defined(TH_REAL_IS_INT) || CUDA_FLOAT',
+    'with_stateless': True,
+    'cname': 'THTensor_(abs)'},
+
+    {'arguments': [
+        {'type': 'THTensor*', 'name': 'destination'},
+         {'type': 'THTensor*', 'name': 'source'}],
+    'return': 'argument 0',
+    'defined_if': 'defined(TH_REAL_IS_FLOAT) || defined(TH_REAL_IS_DOUBLE) || defined(TH_REAL_IS_LONG) || defined(TH_REAL_IS_INT) || CUDA_FLOAT',
+    'with_stateless': True,
+    'cname': 'THTensor_(abs)'}
+],
+'python_name': 'abs'}
+]

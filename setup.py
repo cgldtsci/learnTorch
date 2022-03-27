@@ -83,7 +83,7 @@ class build_ext(setuptools.command.build_ext.build_ext):
         cwrap('torch/csrc/generic/TensorMethods.cwrap', plugins=[
             # THPLongArgsPlugin(),
             THPPlugin(),
-            # ArgcountSortPlugin(),
+            ArgcountSortPlugin(),
             # AutoGPU()
         ])
 #         # It's an old-style class in Python 2.7...

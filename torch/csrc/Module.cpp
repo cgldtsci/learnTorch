@@ -272,6 +272,9 @@ static PyObject * TH_CONCAT_2(THPModule_, name)(PyObject *_unused, PyObject *arg
   return PyObject_Call(method, args, NULL);                                    \
 }
 
+IMPLEMENT_STATELESS(abs)
+#undef IMPLEMENT_STATELESS
+
 
 // For logical functions a reverse type search is required (if the first argument
 // is a ByteTensor (result), it shouldn't pick it's version).
@@ -295,6 +298,8 @@ static PyObject * TH_CONCAT_2(THPModule_, name)(PyObject *_unused, PyObject *arg
       Py_TYPE(tensor)->tp_name);                                               \
   return PyObject_Call(method, args, NULL);                                    \
 }
+
+#undef IMPLEMENT_STATELESS
 
 // In nonzero, the first argument might be a LongTensor that will be used
 // for indices output, so we should pick a function based on second
@@ -357,6 +362,8 @@ static PyMethodDef TorchMethods[] = {
   {"getRNGState",     (PyCFunction)THPModule_getRNGState,       METH_VARARGS, NULL},
   {"setRNGState",     (PyCFunction)THPModule_setRNGState,       METH_VARARGS, NULL},
   {"manualSeed",      (PyCFunction)THPModule_manualSeed,        METH_VARARGS, NULL},
+
+  {"abs",             (PyCFunction)THPModule_abs,               METH_VARARGS, NULL},
 
   {NULL, NULL, 0, NULL}
 
