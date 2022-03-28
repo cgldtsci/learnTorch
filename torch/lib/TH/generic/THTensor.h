@@ -24,6 +24,9 @@ typedef struct THTensor
 TH_API real *THTensor_(data)(const THTensor *self);
 TH_API int THTensor_(nDimension)(const THTensor *self);
 TH_API THStorage* THTensor_(storage)(const THTensor *self);
+TH_API THLongStorage *THTensor_(newSizeOf)(THTensor *self);
+TH_API long THTensor_(size)(const THTensor *self, int dim);
+
 
 /**** creation methods ****/
 TH_API THTensor *THTensor_(new)(void);
@@ -35,8 +38,13 @@ TH_API THTensor *THTensor_(newWithStorage)(THStorage *storage_, long storageOffs
 /* stride might be NULL */
 
 TH_API THTensor *THTensor_(newWithSize)(THLongStorage *size_, THLongStorage *stride_);
+TH_API void THTensor_(resize)(THTensor *tensor, THLongStorage *size, THLongStorage *stride);
 TH_API void THTensor_(resizeAs)(THTensor *tensor, THTensor *src);
 TH_API void THTensor_(free)(THTensor *self);
+
+TH_API void THTensor_(set)(THTensor *self, THTensor *src);
+
+TH_API real THTensor_(get1d)(const THTensor *tensor, long x0);
 
 TH_API int THTensor_(isContiguous)(const THTensor *self);
 
@@ -46,5 +54,8 @@ TH_API void THTensor_(resize4d)(THTensor *tensor, long size0_, long size1_, long
 TH_API long THTensor_(nElement)(const THTensor *self);
 
 TH_API int THTensor_(isSameSizeAs)(const THTensor *self, const THTensor *src);
+
+TH_API void THTensor_(narrow)(THTensor *self, THTensor *src, int dimension_, long firstIndex_, long size_);
+TH_API void THTensor_(select)(THTensor *self, THTensor *src, int dimension_, long sliceIndex_);
 
 #endif

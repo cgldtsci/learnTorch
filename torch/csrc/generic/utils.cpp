@@ -64,6 +64,20 @@ real THPUtils_(unpackReal)(PyObject *value)
   }
 }
 
+
+PyObject * THPUtils_(newReal)(real value)
+{
+#if defined(TH_REAL_IS_DOUBLE) || defined(TH_REAL_IS_FLOAT) || \
+    defined(THC_REAL_IS_DOUBLE) || defined(THC_REAL_IS_FLOAT)
+  return PyFloat_FromDouble(value);
+#elif defined(THC_REAL_IS_HALF)
+  return PyFloat_FromDouble(THC_half2float(value));
+#else
+  // TODO: return long if result doesn't fit
+  return PyInt_FromLong(value);
+#endif
+}
+
 template<>
 void THPPointer<THStorage>::free() {
   if (ptr)

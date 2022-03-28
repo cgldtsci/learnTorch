@@ -1,6 +1,8 @@
 #include "THAtomic.h"
 #include "THTensor.h"
 #include "THMath.h"
+#include "THTensorDimApply.h"
+
 
 #include "generic/THTensor.c"
 #include "THGenerateAllTypes.h"

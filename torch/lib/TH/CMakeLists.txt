@@ -323,7 +323,7 @@ INSTALL(FILES
   THStorage.h
   THTensor.h
   THTensorApply.h
-#  THTensorDimApply.h
+THTensorDimApply.h
 #  THTensorMacros.h
 #  THVector.h
   THAtomic.h

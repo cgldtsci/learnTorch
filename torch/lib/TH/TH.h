@@ -8,5 +8,6 @@
 #include "THStorage.h"
 #include "THTensor.h"
 #include "THTensorApply.h"
+#include "THTensorDimApply.h"
 
 #endif

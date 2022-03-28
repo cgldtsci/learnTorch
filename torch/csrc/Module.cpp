@@ -273,6 +273,10 @@ static PyObject * TH_CONCAT_2(THPModule_, name)(PyObject *_unused, PyObject *arg
 }
 
 IMPLEMENT_STATELESS(abs)
+IMPLEMENT_STATELESS(min)
+IMPLEMENT_STATELESS(max)
+IMPLEMENT_STATELESS(narrow)
+
 #undef IMPLEMENT_STATELESS
 
 
@@ -364,6 +368,9 @@ static PyMethodDef TorchMethods[] = {
   {"manualSeed",      (PyCFunction)THPModule_manualSeed,        METH_VARARGS, NULL},
 
   {"abs",             (PyCFunction)THPModule_abs,               METH_VARARGS, NULL},
+  {"min",             (PyCFunction)THPModule_min,               METH_VARARGS, NULL},
+  {"max",             (PyCFunction)THPModule_max,               METH_VARARGS, NULL},
+  {"narrow",          (PyCFunction)THPModule_narrow,            METH_VARARGS, NULL},
 
   {NULL, NULL, 0, NULL}
 

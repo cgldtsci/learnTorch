@@ -21,6 +21,20 @@ int THTensor_(nDimension)(const THTensor *self)
   return self->nDimension;
 }
 
+long THTensor_(size)(const THTensor *self, int dim)
+{
+  THArgCheck((dim >= 0) && (dim < self->nDimension), 2, "dimension %d out of range of %dD tensor",
+      dim+1, THTensor_(nDimension)(self));
+  return self->size[dim];
+}
+
+THLongStorage *THTensor_(newSizeOf)(THTensor *self)
+{
+  THLongStorage *size = THLongStorage_newWithSize(self->nDimension);
+  THLongStorage_rawCopy(size, self->size);
+  return size;
+}
+
 /**** creation methods ****/
 
 static void THTensor_(rawInit)(THTensor *self);
@@ -91,6 +105,14 @@ void THTensor_(free)(THTensor *self)
 }
 
 /* Resize */
+void THTensor_(resize)(THTensor *self, THLongStorage *size, THLongStorage *stride)
+{
+  THArgCheck(size != NULL, 2, "invalid size");
+  if(stride)
+    THArgCheck(stride->size == size->size, 3, "invalid stride");
+
+  THTensor_(rawResize)(self, size->size, size->data, (stride ? stride->data : NULL));
+}
 void THTensor_(resizeAs)(THTensor *self, THTensor *src)
 {
   if(!THTensor_(isSameSizeAs)(self, src))
@@ -259,6 +281,63 @@ int THTensor_(isSameSizeAs)(const THTensor *self, const THTensor* src)
       return 0;
   }
   return 1;
+}
+
+
+void THTensor_(set)(THTensor *self, THTensor *src)
+{
+  if(self != src)
+    THTensor_(rawSet)(self,
+                      src->storage,
+                      src->storageOffset,
+                      src->nDimension,
+                      src->size,
+                      src->stride);
+}
+
+real THTensor_(get1d)(const THTensor *tensor, long x0)
+{
+  THArgCheck(tensor->nDimension == 1, 1, "tensor must have one dimension");
+  THArgCheck( (x0 >= 0) && (x0 < tensor->size[0]), 2, "out of range");
+  return THStorage_(get)(tensor->storage, tensor->storageOffset+x0*tensor->stride[0]);
+}
+
+void THTensor_(narrow)(THTensor *self, THTensor *src, int dimension, long firstIndex, long size)
+{
+  if(!src)
+    src = self;
+
+  THArgCheck( (dimension >= 0) && (dimension < src->nDimension), 2, "out of range");
+  THArgCheck( (firstIndex >= 0) && (firstIndex < src->size[dimension]), 3, "out of range");
+  THArgCheck( (size > 0) && (firstIndex+size <= src->size[dimension]), 4, "out of range");
+
+  THTensor_(set)(self, src);
+
+  if(firstIndex > 0)
+    self->storageOffset += firstIndex*self->stride[dimension];
+
+  self->size[dimension] = size;
+}
+
+void THTensor_(select)(THTensor *self, THTensor *src, int dimension, long sliceIndex)
+{
+  int d;
+
+  if(!src)
+    src = self;
+
+  THArgCheck(src->nDimension > 1, 1, "cannot select on a vector");
+  THArgCheck((dimension >= 0) && (dimension < src->nDimension), 2, "out of range");
+  THArgCheck((sliceIndex >= 0) && (sliceIndex < src->size[dimension]), 3, "out of range");
+
+  THTensor_(set)(self, src);
+  THTensor_(narrow)(self, NULL, dimension, sliceIndex, 1);
+  for(d = dimension; d < self->nDimension-1; d++)
+  {
+    self->size[d] = self->size[d+1];
+    self->stride[d] = self->stride[d+1];
+  }
+  self->nDimension--;
 }
 
 #endif

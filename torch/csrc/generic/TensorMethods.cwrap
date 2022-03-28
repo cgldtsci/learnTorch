@@ -1,3 +1,10 @@
+#if IS_CUDA
+#define THPIndexTensor THCPLongTensor
+#define THPIndexTensorClass THCPLongTensorClass
+#else
+#define THPIndexTensor THPLongTensor
+#define THPIndexTensorClass THPLongTensorClass
+#endif
 
 // TODO: check that there are no args
 [[
@@ -34,4 +41,96 @@ static PyObject * THPTensor_(storage)(THPTensor *self, PyObject *args)
     - arg: THTensor* destination
       allocate: True
     - THTensor* self
+]]
+
+[[
+  name: min
+  with_stateless: True
+  options:
+    - cname: minall
+      return: real
+      arguments:
+        - THTensor* self
+    - cname: min
+      return: argument 0,1
+      arguments:
+        - arg: THTensor* min
+          allocate: True
+        - arg: THIndexTensor* min_indices
+          allocate: True
+        - THTensor* self
+        - long dim
+]]
+
+
+[[
+  name: max
+  with_stateless: True
+  options:
+    - cname: maxall
+      return: real
+      arguments:
+        - THTensor* self
+    - cname: max
+      return: argument 0,1
+      arguments:
+        - arg: THTensor* max
+          allocate: True
+        - arg: THIndexTensor* max_indices
+          allocate: True
+        - THTensor* self
+        - long dim
+]]
+
+
+[[
+  name: THPTensor_(select)
+  python_name: select
+  only_register: True
+]]
+static PyObject * THPTensor_(select)(THPTensor *self, PyObject *args)
+{
+  HANDLE_TH_ERRORS
+  long dim, idx;
+  if (!PyArg_ParseTuple(args, "ll", &dim, &idx))
+    return NULL;
+
+  int ndim = THTensor_(nDimension)(LIBRARY_STATE self->cdata);
+  if(ndim > 1) {
+    THTensor *selected = THTensor_(newWithTensor)(LIBRARY_STATE self->cdata);
+    THTensor_(select)(LIBRARY_STATE selected, NULL, dim, idx);
+    return THPTensor_(newObject)(selected);
+  }
+  else {
+    THArgCheck(ndim == 1, 1, "empty Tensor");
+    return THPUtils_(newReal)(THTensor_(get1d)(LIBRARY_STATE self->cdata, idx));
+  }
+  END_HANDLE_TH_ERRORS
+}
+
+
+[[
+  name: size
+  options:
+    - return: long
+      cname: size
+      arguments:
+        - THTensor* self
+        - long dim
+    - return: THLongStorage*
+      cname: newSizeOf
+      arguments:
+        - THTensor* self
+]]
+
+[[
+  name: narrow
+  return: argument 0
+  arguments:
+    - arg: THTensor* result
+      allocate: True
+    - THTensor* self
+    - long dimension
+    - long start
+    - long length
 ]]
