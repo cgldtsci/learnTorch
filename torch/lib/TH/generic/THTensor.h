@@ -26,6 +26,9 @@ TH_API int THTensor_(nDimension)(const THTensor *self);
 TH_API THStorage* THTensor_(storage)(const THTensor *self);
 TH_API THLongStorage *THTensor_(newSizeOf)(THTensor *self);
 TH_API long THTensor_(size)(const THTensor *self, int dim);
+TH_API long THTensor_(storageOffset)(const THTensor *self);
+TH_API long THTensor_(stride)(const THTensor *self, int dim);
+TH_API THLongStorage *THTensor_(newStrideOf)(THTensor *self);
 
 
 /**** creation methods ****/
@@ -54,6 +57,8 @@ TH_API void THTensor_(resize4d)(THTensor *tensor, long size0_, long size1_, long
 TH_API long THTensor_(nElement)(const THTensor *self);
 
 TH_API int THTensor_(isSameSizeAs)(const THTensor *self, const THTensor *src);
+
+TH_API void THTensor_(setStorage)(THTensor *self, THStorage *storage_, long storageOffset_, THLongStorage *size_, THLongStorage *stride_);
 
 TH_API void THTensor_(narrow)(THTensor *self, THTensor *src, int dimension_, long firstIndex_, long size_);
 TH_API void THTensor_(select)(THTensor *self, THTensor *src, int dimension_, long sliceIndex_);

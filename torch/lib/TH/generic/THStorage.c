@@ -53,6 +53,13 @@ THStorage* THStorage_(newWithSize)(long size)
   return THStorage_(newWithAllocator)(size, &THDefaultAllocator, NULL);
 }
 
+THStorage* THStorage_(newWithSize1)(real data0)
+{
+  THStorage *self = THStorage_(newWithSize)(1);
+  self->data[0] = data0;
+  return self;
+}
+
 THStorage* THStorage_(newWithAllocator)(long size,
                                         THAllocator *allocator,
                                         void *allocatorContext)

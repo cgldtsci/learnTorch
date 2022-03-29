@@ -5,7 +5,7 @@ from tools.cwrap.plugins.ArgcountSortPlugin import ArgcountSortPlugin
 from tools.cwrap.plugins.AutoGPU import AutoGPU
 
 cwrap('torch/csrc/generic/TensorMethods.cwrap', plugins=[
-    # THPLongArgsPlugin(),
+    THPLongArgsPlugin(),
     THPPlugin(),
     # ArgcountSortPlugin(),
     # AutoGPU()

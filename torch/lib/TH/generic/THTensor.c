@@ -8,6 +8,25 @@ THStorage *THTensor_(storage)(const THTensor *self)
   return self->storage;
 }
 
+long THTensor_(storageOffset)(const THTensor *self)
+{
+  return self->storageOffset;
+}
+
+long THTensor_(stride)(const THTensor *self, int dim)
+{
+  THArgCheck((dim >= 0) && (dim < self->nDimension), 2, "dimension %d out of range of %dD tensor", dim+1,
+      THTensor_(nDimension)(self));
+  return self->stride[dim];
+}
+
+THLongStorage *THTensor_(newStrideOf)(THTensor *self)
+{
+  THLongStorage *stride = THLongStorage_newWithSize(self->nDimension);
+  THLongStorage_rawCopy(stride, self->stride);
+  return stride;
+}
+
 real *THTensor_(data)(const THTensor *self)
 {
   if(self->storage)
@@ -294,6 +313,21 @@ void THTensor_(set)(THTensor *self, THTensor *src)
                       src->size,
                       src->stride);
 }
+
+
+void THTensor_(setStorage)(THTensor *self, THStorage *storage_, long storageOffset_, THLongStorage *size_, THLongStorage *stride_)
+{
+  if(size_ && stride_)
+    THArgCheck(size_->size == stride_->size, 5, "inconsistent size/stride sizes");
+
+  THTensor_(rawSet)(self,
+                    storage_,
+                    storageOffset_,
+                    (size_ ? size_->size : (stride_ ? stride_->size : 0)),
+                    (size_ ? size_->data : NULL),
+                    (stride_ ? stride_->data : NULL));
+}
+
 
 real THTensor_(get1d)(const THTensor *tensor, long x0)
 {

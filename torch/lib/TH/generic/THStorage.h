@@ -41,8 +41,8 @@ TH_API void THStorage_(set)(THStorage*, long, real);
 TH_API real THStorage_(get)(const THStorage*, long);
 
 TH_API THStorage* THStorage_(new)(void);
-
 TH_API THStorage* THStorage_(newWithSize)(long size);
+TH_API THStorage* THStorage_(newWithSize1)(real);
 
 /* takes ownership of data */
 TH_API THStorage* THStorage_(newWithData)(real *data, long size);

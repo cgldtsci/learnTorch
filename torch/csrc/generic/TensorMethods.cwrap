@@ -33,6 +33,27 @@ static PyObject * THPTensor_(storage)(THPTensor *self, PyObject *args)
 ]]
 
 [[
+  name: storageOffset
+  return: long
+  arguments:
+    - THTensor* self
+]]
+
+[[
+  name: stride
+  options:
+    - return: long
+      cname: stride
+      arguments:
+        - THTensor* self
+        - long dim
+    - return: THLongStorage*
+      cname: newStrideOf
+      arguments:
+        - THTensor* self
+]]
+
+[[
   name: abs
   return: argument 0
   defined_if: defined(TH_REAL_IS_FLOAT) || defined(TH_REAL_IS_DOUBLE) || defined(TH_REAL_IS_LONG) || defined(TH_REAL_IS_INT) || CUDA_FLOAT
@@ -133,4 +154,42 @@ static PyObject * THPTensor_(select)(THPTensor *self, PyObject *args)
     - long dimension
     - long start
     - long length
+]]
+
+[[
+  name: set_
+  cname: set
+  return: argument 0
+  options:
+    - cname: set
+      arguments:
+        - THTensor* self
+        - THTensor* source
+    - cname: setStorage
+      arguments:
+        - THTensor* self
+        - CONSTANT NULL, 0, NULL, NULL
+    - cname: setStorage
+      before_call: THLongStoragePtr __storage_size = THLongStorage_newWithSize1(THStorage_(size)(LIBRARY_STATE ((THPStorage*)$arg1)->cdata));
+      arguments:
+        - THTensor* self
+        - THStorage* storage
+        - CONSTANT 0
+        - CONSTANT __storage_size.get()
+        - CONSTANT NULL
+    - cname: setStorage
+      arguments:
+        - THTensor* self
+        - THStorage* sourceStorage
+        - long storageOffset
+        - THLongStorage* sizes
+        - THLongStorage* strides
+    - cname: setStorage
+      long_args: True
+      arguments:
+        - THTensor* self
+        - THStorage* sourceStorage
+        - long storageOffset
+        - THLongStorage* long_args
+        - CONSTANT NULL
 ]]
