@@ -2,6 +2,7 @@
 #include "THTensor.h"
 #include "THMath.h"
 #include "THTensorDimApply.h"
+#include "THBlas.h"
 
 
 #include "generic/THTensor.c"

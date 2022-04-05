@@ -405,4 +405,73 @@ void THTensor_(transpose)(THTensor *self, THTensor *src, int dimension1, int dim
   self->size[dimension2] = z;
 }
 
+THTensor *THTensor_(newClone)(THTensor *self)
+{
+  THTensor *tensor = THTensor_(new)();
+  THTensor_(resizeAs)(tensor, self);
+  THTensor_(copy)(tensor, self);
+  return tensor;
+}
+
+THTensor *THTensor_(newContiguous)(THTensor *self)
+{
+  if(!THTensor_(isContiguous)(self))
+    return THTensor_(newClone)(self);
+  else
+  {
+    THTensor_(retain)(self);
+    return self;
+  }
+}
+
+void THTensor_(retain)(THTensor *self)
+{
+  if(self->flag & TH_TENSOR_REFCOUNTED)
+    THAtomicIncrementRef(&self->refcount);
+}
+
+
+void THTensor_(unfold)(THTensor *self, THTensor *src, int dimension, long size, long step)
+{
+  long *newSize;
+  long *newStride;
+  int d;
+
+  if(!src)
+    src = self;
+
+  THArgCheck( (src->nDimension > 0), 1, "cannot unfold an empty tensor");
+  THArgCheck((dimension >= 0) && (dimension < src->nDimension), 2, "out of range");
+  THArgCheck(size <= src->size[dimension], 3, "out of range");
+  THArgCheck(step > 0, 4, "invalid step");
+
+  THTensor_(set)(self, src);
+
+  newSize = THAlloc(sizeof(long)*(self->nDimension+1));
+  newStride = THAlloc(sizeof(long)*(self->nDimension+1));
+
+  newSize[self->nDimension] = size;
+  newStride[self->nDimension] = self->stride[dimension];
+  for(d = 0; d < self->nDimension; d++)
+  {
+    if(d == dimension)
+    {
+      newSize[d] = (self->size[d] - size) / step + 1;
+      newStride[d] = step*self->stride[d];
+    }
+    else
+    {
+      newSize[d] = self->size[d];
+      newStride[d] = self->stride[d];
+    }
+  }
+
+  THFree(self->size);
+  THFree(self->stride);
+
+  self->size = newSize;
+  self->stride = newStride;
+  self->nDimension++;
+}
+
 #endif

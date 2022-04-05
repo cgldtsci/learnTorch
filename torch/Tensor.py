@@ -144,3 +144,62 @@ class _TensorBase(object):
                         break
                 perm[j] = -1
         return tensor
+
+    def expandAs(self, tensor):
+        return self.expand(tensor.size())
+
+    def expand(self, *args):
+        result = self.new()
+        sizes = args[0] if len(args) == 1 and torch.isLongStorage(args[0]) else torch.LongStorage(args)
+        src = self
+
+        src_dim = src.dim()
+        src_stride = src.stride()
+        src_size = src.size()
+
+        if sizes.size() != src_dim:
+            raise ValueError('the number of dimensions provided must equal tensor.dim()')
+
+        # create a new geometry for tensor:
+        for i, size in enumerate(src_size):
+            if size == 1:
+                src_size[i] = sizes[i]
+                src_stride[i] = 0
+            elif size != sizes[i]:
+                raise ValueError('incorrect size: only supporting singleton expansion (size=1)')
+
+        result.set_(src.storage(), src.storageOffset(),
+                                src_size, src_stride)
+        return result
+
+    def repeatTensor(self, *args):
+        # If args == (torch.LongStorage,), then we need to unpack the tuple
+        repeats = list(args[0] if len(args) == 1 else args)
+        result = self.new()
+        src = self.contiguous()
+
+        if len(repeats) < src.dim():
+            raise ValueError('Number of dimensions of repeat dims can not be smaller than number of dimensions of tensor')
+
+        xtensor = src.new().set_(src)
+        xsize = xtensor.size().tolist()
+        for i in torch._pyrange(len(repeats)-src.dim()):
+            xsize = [1] + xsize
+
+        size = torch.LongStorage([a * b for a, b in zip(xsize, repeats)])
+        xtensor.resize_(torch.LongStorage(xsize))
+        result.resize_(size)
+        urtensor = result.new(result)
+        for i in torch._pyrange(xtensor.dim()):
+            urtensor = urtensor.unfold(i,xtensor.size(i),xtensor.size(i))
+        for i in torch._pyrange(urtensor.dim()-xtensor.dim()):
+            xsize = [1] + xsize
+        xtensor.resize_(torch.LongStorage(xsize))
+        xxtensor = xtensor.expandAs(urtensor)
+        urtensor.copy_(xxtensor)
+        return result
+
+    #TODO: add tests for operators
+    def __add__(self, other):
+        return self.add(other)
+    __radd__ = __add__

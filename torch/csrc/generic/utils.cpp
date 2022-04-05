@@ -78,6 +78,11 @@ PyObject * THPUtils_(newReal)(real value)
 #endif
 }
 
+bool THPUtils_(checkReal)(PyObject *value)
+{
+  return PyFloat_Check(value) || PyLong_Check(value) || PyInt_Check(value);
+}
+
 template<>
 void THPPointer<THStorage>::free() {
   if (ptr)

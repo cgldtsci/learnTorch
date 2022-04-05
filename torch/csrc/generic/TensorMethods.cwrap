@@ -1,3 +1,9 @@
+#ifdef THC_REAL_IS_HALF
+#define AS_REAL(x) THC_float2half(x)
+#else
+#define AS_REAL(x) x
+#endif
+
 #if IS_CUDA
 #define THPIndexTensor THCPLongTensor
 #define THPIndexTensorClass THCPLongTensorClass
@@ -5,6 +11,7 @@
 #define THPIndexTensor THPLongTensor
 #define THPIndexTensorClass THPLongTensorClass
 #endif
+
 
 // TODO: check that there are no args
 [[
@@ -230,4 +237,57 @@ static PyObject * THPTensor_(select)(THPTensor *self, PyObject *args)
     - THTensor* self
     - long dim0
     - long dim1
+]]
+
+[[
+  name: contiguous
+  cname: newContiguous
+  return: THTensor*
+  arguments:
+    - THTensor* self
+]]
+
+[[
+  name: resize_
+  cname: resize
+  return: self
+  long_args: True
+  arguments:
+    - THTensor* self
+    - THLongStorage* long_args
+    - CONSTANT NULL
+]]
+
+[[
+  name: unfold
+  return: argument 0
+  arguments:
+    - arg: THTensor* result
+      allocate: True
+    - THTensor* self
+    - long dimension
+    - long size
+    - long step
+]]
+
+
+[[
+  name: add
+  with_stateless: True
+  return: argument 0
+  options:
+    - cname: add
+      arguments:
+        - arg: THTensor* result
+          allocate: True
+        - THTensor* self
+        - real value
+    - cname: cadd
+      arguments:
+        - arg: THTensor* result
+          allocate: True
+        - THTensor* self
+        - arg: real value
+          default: AS_REAL(1)
+        - THTensor* other
 ]]

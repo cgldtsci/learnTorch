@@ -2,6 +2,10 @@
 #define TH_GENERIC_FILE "generic/THTensorMath.h"
 #else
 
+TH_API void THTensor_(add)(THTensor *r_, THTensor *t, real value);
+
+TH_API void THTensor_(cadd)(THTensor *r_, THTensor *t, real value, THTensor *src);
+
 TH_API real THTensor_(minall)(THTensor *t);
 TH_API real THTensor_(maxall)(THTensor *t);
 

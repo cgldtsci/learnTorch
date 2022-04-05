@@ -81,7 +81,7 @@ class build_ext(setuptools.command.build_ext.build_ext):
         from tools.cwrap.plugins.ArgcountSortPlugin import ArgcountSortPlugin
         from tools.cwrap.plugins.AutoGPU import AutoGPU
         cwrap('torch/csrc/generic/TensorMethods.cwrap', plugins=[
-            # THPLongArgsPlugin(),
+            THPLongArgsPlugin(),
             THPPlugin(),
             ArgcountSortPlugin(),
             # AutoGPU()

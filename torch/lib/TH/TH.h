@@ -3,6 +3,11 @@
 
 #include "THGeneral.h"
 
+#include "THBlas.h"
+//#ifdef USE_LAPACK
+//#include "THLapack.h"
+//#endif
+
 #include "THAtomic.h"
 #include "THRandom.h"
 #include "THStorage.h"

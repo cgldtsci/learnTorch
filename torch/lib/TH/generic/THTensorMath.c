@@ -146,4 +146,42 @@ long THTensor_(numel)(THTensor *t)
   return THTensor_(nElement)(t);
 }
 
+
+void THTensor_(add)(THTensor *r_, THTensor *t, real value)
+{
+  THTensor_(resizeAs)(r_, t);
+  if (THTensor_(isContiguous)(r_) && THTensor_(isContiguous)(t) && THTensor_(nElement)(r_) == THTensor_(nElement)(t)) {
+      real *tp = THTensor_(data)(t);
+      real *rp = THTensor_(data)(r_);
+      long sz = THTensor_(nElement)(t);
+      long i;
+      #pragma omp parallel for if(sz > TH_OMP_OVERHEAD_THRESHOLD) private(i)
+      for (i=0; i<sz; i++)
+          rp[i] = tp[i] + value;
+  } else {
+      TH_TENSOR_APPLY2(real, r_, real, t, *r__data = *t_data + value;);
+  }
+}
+
+void THTensor_(cadd)(THTensor *r_, THTensor *t, real value, THTensor *src)
+{
+  THTensor_(resizeAs)(r_, t);
+  if (THTensor_(isContiguous)(r_) && THTensor_(isContiguous)(t) && THTensor_(isContiguous)(src) && THTensor_(nElement)(r_) == THTensor_(nElement)(src)) {
+    if(r_ == t) {
+      THBlas_(axpy)(THTensor_(nElement)(t), value, THTensor_(data)(src), 1, THTensor_(data)(r_), 1);
+    } else {
+      real *tp = THTensor_(data)(t);
+      real *sp = THTensor_(data)(src);
+      real *rp = THTensor_(data)(r_);
+      long sz = THTensor_(nElement)(t);
+      long i;
+      #pragma omp parallel for if(sz > TH_OMP_OVERHEAD_THRESHOLD) private(i)
+      for (i=0; i< sz; i++)
+          rp[i] = tp[i] + value * sp[i];
+    }
+  } else {
+      TH_TENSOR_APPLY3(real, r_, real, t, real, src, *r__data = *t_data + value * *src_data;);
+  }
+}
+
 #endif

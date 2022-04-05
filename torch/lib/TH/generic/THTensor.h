@@ -45,7 +45,9 @@ TH_API void THTensor_(resize)(THTensor *tensor, THLongStorage *size, THLongStora
 TH_API void THTensor_(resizeAs)(THTensor *tensor, THTensor *src);
 TH_API void THTensor_(free)(THTensor *self);
 
+TH_API THTensor *THTensor_(newClone)(THTensor *self);
 TH_API THTensor *THTensor_(newTranspose)(THTensor *tensor, int dimension1_, int dimension2_);
+TH_API THTensor *THTensor_(newContiguous)(THTensor *tensor);
 
 TH_API void THTensor_(set)(THTensor *self, THTensor *src);
 
@@ -65,5 +67,7 @@ TH_API void THTensor_(setStorage)(THTensor *self, THStorage *storage_, long stor
 TH_API void THTensor_(narrow)(THTensor *self, THTensor *src, int dimension_, long firstIndex_, long size_);
 TH_API void THTensor_(select)(THTensor *self, THTensor *src, int dimension_, long sliceIndex_);
 TH_API void THTensor_(transpose)(THTensor *self, THTensor *src, int dimension1_, int dimension2_);
+TH_API void THTensor_(retain)(THTensor *self);
+TH_API void THTensor_(unfold)(THTensor *self, THTensor *src, int dimension_, long size_, long step_);
 
 #endif
