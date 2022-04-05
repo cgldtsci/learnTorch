@@ -141,4 +141,9 @@ void THTensor_(max)(THTensor *values_, THLongTensor *indices_, THTensor *t, int 
                        *values__data = theMax;);
 }
 
+long THTensor_(numel)(THTensor *t)
+{
+  return THTensor_(nElement)(t);
+}
+
 #endif

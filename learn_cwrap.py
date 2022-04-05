@@ -7,6 +7,6 @@ from tools.cwrap.plugins.AutoGPU import AutoGPU
 cwrap('torch/csrc/generic/TensorMethods.cwrap', plugins=[
     THPLongArgsPlugin(),
     THPPlugin(),
-    # ArgcountSortPlugin(),
+    ArgcountSortPlugin(),
     # AutoGPU()
 ])

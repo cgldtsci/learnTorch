@@ -33,6 +33,12 @@ static PyObject * THPTensor_(storage)(THPTensor *self, PyObject *args)
 ]]
 
 [[
+  name: THPTensor_(nDimension)
+  python_name: dim
+  only_register: True
+]]
+
+[[
   name: storageOffset
   return: long
   arguments:
@@ -192,4 +198,36 @@ static PyObject * THPTensor_(select)(THPTensor *self, PyObject *args)
         - long storageOffset
         - THLongStorage* long_args
         - CONSTANT NULL
+]]
+
+[[
+  name: numel
+  return: long
+  with_stateless: True
+  arguments:
+    - THTensor* self
+]]
+
+[[
+  name: THPTensor_(numel)
+  python_name: nElement
+  only_register: True
+]]
+
+[[
+  name: isContiguous
+  return: bool
+  arguments:
+    - THTensor* self
+]]
+
+[[
+  name: transpose
+  with_stateless: True
+  cname: newTranspose
+  return: THTensor*
+  arguments:
+    - THTensor* self
+    - long dim0
+    - long dim1
 ]]

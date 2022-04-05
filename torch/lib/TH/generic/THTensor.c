@@ -374,4 +374,35 @@ void THTensor_(select)(THTensor *self, THTensor *src, int dimension, long sliceI
   self->nDimension--;
 }
 
+THTensor *THTensor_(newTranspose)(THTensor *tensor, int dimension1_, int dimension2_)
+{
+  THTensor *self = THTensor_(newWithTensor)(tensor);
+  THTensor_(transpose)(self, NULL, dimension1_, dimension2_);
+  return self;
+}
+
+
+void THTensor_(transpose)(THTensor *self, THTensor *src, int dimension1, int dimension2)
+{
+  long z;
+
+  if(!src)
+    src = self;
+
+  THArgCheck( (dimension1 >= 0) && (dimension1 < src->nDimension), 1, "out of range");
+  THArgCheck( (dimension2 >= 0) && (dimension2 < src->nDimension), 2, "out of range");
+
+  THTensor_(set)(self, src);
+
+  if(dimension1 == dimension2)
+	  return;
+
+  z = self->stride[dimension1];
+  self->stride[dimension1] = self->stride[dimension2];
+  self->stride[dimension2] = z;
+  z = self->size[dimension1];
+  self->size[dimension1] = self->size[dimension2];
+  self->size[dimension2] = z;
+}
+
 #endif
