@@ -368,3 +368,146 @@ static PyObject * THPTensor_(select)(THPTensor *self, PyObject *args)
     - THTensor* self
     - real value
 ]]
+
+[[
+  name: mul
+  with_stateless: True
+  return: argument 0
+  options:
+    - cname: mul
+      arguments:
+        - arg: THTensor* result
+          allocate: True
+        - THTensor* self
+        - real value
+    - cname: cmul
+      arguments:
+        - arg: THTensor* result
+          allocate: True
+        - THTensor* self
+        - THTensor* other
+]]
+
+[[
+  name: mul_
+  return: argument 0
+  options:
+    - cname: mul
+      arguments:
+        - THTensor* self
+        - THTensor* self
+        - real value
+    - cname: cmul
+      arguments:
+        - THTensor* self
+        - THTensor* self
+        - THTensor* other
+]]
+
+
+[[
+  name: div
+  with_stateless: True
+  return: argument 0
+  options:
+    - cname: div
+      arguments:
+        - arg: THTensor* result
+          allocate: True
+        - THTensor* self
+        - real value
+    - cname: cdiv
+      arguments:
+        - arg: THTensor* result
+          allocate: True
+        - THTensor* self
+        - THTensor* other
+]]
+
+[[
+  name: div_
+  return: argument 0
+  options:
+    - cname: div
+      arguments:
+        - THTensor* self
+        - THTensor* self
+        - real value
+    - cname: cdiv
+      arguments:
+        - THTensor* self
+        - THTensor* self
+        - THTensor* other
+]]
+
+
+[[
+  name: mv
+  only_stateless: True
+  cname: addmv
+  return: argument 0
+  before_call: |
+    long s = THTensor_(size)(LIBRARY_STATE ((THPTensor*)$arg4)->cdata, 0);
+    THTensor_(resize1d)(LIBRARY_STATE ((THPTensor*)$arg0)->cdata, s);
+  arguments:
+    - arg: THTensor* result
+      allocate: True
+    - CONSTANT AS_REAL(0)
+    - argument 0
+    - CONSTANT AS_REAL(1)
+    - THTensor* mat
+    - THTensor* vec
+]]
+
+[[
+  name: mm
+  only_stateless: True
+  cname: addmm
+  return: argument 0
+  before_call: |
+    long s1 = THTensor_(size)(LIBRARY_STATE ((THPTensor*)$arg4)->cdata, 0);
+    long s2 = THTensor_(size)(LIBRARY_STATE ((THPTensor*)$arg5)->cdata, 1);
+    THTensor_(resize2d)(LIBRARY_STATE ((THPTensor*)$arg0)->cdata, s1, s2);
+  arguments:
+    - arg: THTensor* result
+      allocate: True
+    - CONSTANT AS_REAL(0)
+    - argument 0
+    - CONSTANT AS_REAL(1)
+    - THTensor* mat1
+    - THTensor* mat2
+]]
+
+
+[[
+  name: remainder
+  defined_if: "!IS_CUDA"
+  return: argument 0
+  with_stateless: True
+  options:
+    - cname: remainder
+      arguments:
+        - arg: THTensor* result
+          allocate: True
+        - THTensor* self
+        - real value
+    - cname: cremainder
+      arguments:
+        - arg: THTensor* result
+          allocate: True
+        - THTensor* self
+        - THTensor* other
+]]
+
+[[
+  name: neg
+  defined_if: defined(TH_REAL_IS_FLOAT) || defined(TH_REAL_IS_DOUBLE) || CUDA_FLOAT
+  with_stateless: True
+  options:
+    - cname: neg
+      return: argument 0
+      arguments:
+        - arg: THTensor* destination
+          allocate: True
+        - THTensor* self
+]]

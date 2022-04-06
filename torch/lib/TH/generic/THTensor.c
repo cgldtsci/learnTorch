@@ -251,6 +251,11 @@ void THTensor_(resize1d)(THTensor *tensor, long size0)
   THTensor_(resize4d)(tensor, size0, -1, -1, -1);
 }
 
+void THTensor_(resize2d)(THTensor *tensor, long size0, long size1)
+{
+  THTensor_(resize4d)(tensor, size0, size1, -1, -1);
+}
+
 void THTensor_(resize4d)(THTensor *self, long size0, long size1, long size2, long size3)
 {
   long size[4] = {size0, size1, size2, size3};
@@ -473,5 +478,37 @@ void THTensor_(unfold)(THTensor *self, THTensor *src, int dimension, long size, 
   self->stride = newStride;
   self->nDimension++;
 }
+
+
+THDescBuff THTensor_(sizeDesc)(const THTensor *tensor) {
+  const int L = TH_DESC_BUFF_LEN;
+  THDescBuff buf;
+  char *str = buf.str;
+  int n = 0;
+  n += snprintf(str, L-n, "[");
+  int i;
+  for(i = 0; i < tensor->nDimension; i++) {
+    if(n >= L) break;
+    n += snprintf(str+n, L-n, "%ld", tensor->size[i]);
+    if(i < tensor->nDimension-1) {
+      n += snprintf(str+n, L-n, " x ");
+    }
+  }
+  if(n < L - 2) {
+    snprintf(str+n, L-n, "]");
+  } else {
+    snprintf(str+L-5, 5, "...]");
+  }
+  return buf;
+}
+
+void THTensor_(freeCopyTo)(THTensor *self, THTensor *dst)
+{
+  if(self != dst)
+    THTensor_(copy)(dst, self);
+
+  THTensor_(free)(self);
+}
+
 
 #endif

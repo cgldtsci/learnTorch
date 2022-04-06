@@ -215,3 +215,38 @@ class _TensorBase(object):
 
     def __isub__(self, other):
         return self.sub_(other)
+
+    def __mul__(self, other):
+        return self.mul(other)
+    __rmul__ = __mul__
+
+    def __imul__(self, other):
+        return self.mul_(other)
+
+    def __matmul__(self, other):
+        dim_self = self.dim()
+        dim_other = other.dim()
+        # TODO: should this really be dot product?
+        # if dim_self == 1 and dim_other == 1:
+            # return self.dot(other)
+        if dim_self == 2 and dim_other == 1:
+            return torch.mv(self, other)
+        elif dim_self == 2 and dim_other == 2:
+            return torch.mm(self, other)
+
+    def __div__(self, other):
+        return self.div(other)
+    __truediv__ = __div__
+
+    def __rdiv__(self, other):
+        return self.new().resizeAs_(self).fill_(other).div_(self)
+    __rtruediv__ = __rdiv__
+
+    def __idiv__(self, other):
+        return self.div_(other)
+
+    def __mod__(self, other):
+        return self.remainder(other)
+
+    def __neg__(self):
+        return self.neg()

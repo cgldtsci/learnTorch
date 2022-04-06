@@ -44,6 +44,7 @@ TH_API THTensor *THTensor_(newWithSize)(THLongStorage *size_, THLongStorage *str
 TH_API void THTensor_(resize)(THTensor *tensor, THLongStorage *size, THLongStorage *stride);
 TH_API void THTensor_(resizeAs)(THTensor *tensor, THTensor *src);
 TH_API void THTensor_(free)(THTensor *self);
+TH_API void THTensor_(freeCopyTo)(THTensor *self, THTensor *dst);
 
 TH_API THTensor *THTensor_(newClone)(THTensor *self);
 TH_API THTensor *THTensor_(newTranspose)(THTensor *tensor, int dimension1_, int dimension2_);
@@ -56,6 +57,7 @@ TH_API real THTensor_(get1d)(const THTensor *tensor, long x0);
 TH_API int THTensor_(isContiguous)(const THTensor *self);
 
 TH_API void THTensor_(resize1d)(THTensor *tensor, long size0_);
+TH_API void THTensor_(resize2d)(THTensor *tensor, long size0_, long size1_);
 TH_API void THTensor_(resize4d)(THTensor *tensor, long size0_, long size1_, long size2_, long size3_);
 
 TH_API long THTensor_(nElement)(const THTensor *self);
@@ -70,4 +72,6 @@ TH_API void THTensor_(transpose)(THTensor *self, THTensor *src, int dimension1_,
 TH_API void THTensor_(retain)(THTensor *self);
 TH_API void THTensor_(unfold)(THTensor *self, THTensor *src, int dimension_, long size_, long step_);
 
+/* Debug methods */
+TH_API THDescBuff THTensor_(sizeDesc)(const THTensor *tensor);
 #endif

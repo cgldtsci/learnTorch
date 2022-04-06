@@ -279,6 +279,8 @@ IMPLEMENT_STATELESS(max)
 IMPLEMENT_STATELESS(numel)
 IMPLEMENT_STATELESS(transpose)
 IMPLEMENT_STATELESS(add)
+IMPLEMENT_STATELESS(mm)
+IMPLEMENT_STATELESS(mv)
 
 
 #undef IMPLEMENT_STATELESS
@@ -377,6 +379,8 @@ static PyMethodDef TorchMethods[] = {
   {"numel",           (PyCFunction)THPModule_numel,             METH_VARARGS, NULL},
   {"transpose",       (PyCFunction)THPModule_transpose,         METH_VARARGS, NULL},
   {"add",             (PyCFunction)THPModule_add,               METH_VARARGS, NULL},
+  {"mv",              (PyCFunction)THPModule_mv,                METH_VARARGS, NULL},
+  {"mm",              (PyCFunction)THPModule_mm,                METH_VARARGS, NULL},
 
 //  {"narrow",          (PyCFunction)THPModule_narrow,            METH_VARARGS, NULL},
 

@@ -40,8 +40,8 @@ class cwrap(object):
     DEFAULT_PLUGIN_CLASSES = [
         ArgcountChecker,
         ConstantArguments,
-        # OptionalArguments,
-        # ArgumentReferences,
+        OptionalArguments,
+        ArgumentReferences,
         BeforeCall,
         ReturnArguments
     ]
