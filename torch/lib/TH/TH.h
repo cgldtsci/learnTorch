@@ -9,6 +9,7 @@
 //#endif
 
 #include "THAtomic.h"
+#include "THVector.h"
 #include "THRandom.h"
 #include "THStorage.h"
 #include "THTensor.h"

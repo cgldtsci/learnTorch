@@ -291,3 +291,80 @@ static PyObject * THPTensor_(select)(THPTensor *self, PyObject *args)
           default: AS_REAL(1)
         - THTensor* other
 ]]
+
+
+[[
+  name: add_
+  return: argument 0
+  options:
+    - cname: add
+      arguments:
+        - THTensor* self
+        - THTensor* self
+        - real value
+    - cname: cadd
+      arguments:
+        - THTensor* self
+        - THTensor* self
+        - arg: real value
+          default: AS_REAL(1)
+        - THTensor* other
+]]
+
+
+[[
+  name: sub
+  with_stateless: True
+  return: argument 0
+  options:
+    - cname: sub
+      arguments:
+        - arg: THTensor* result
+          allocate: True
+        - THTensor* self
+        - real value
+    - cname: csub
+      arguments:
+        - arg: THTensor* result
+          allocate: True
+        - THTensor* self
+        - arg: real value
+          default: AS_REAL(1)
+        - THTensor* other
+]]
+
+[[
+  name: sub_
+  return: argument 0
+  options:
+    - cname: sub
+      arguments:
+        - THTensor* self
+        - THTensor* self
+        - real value
+    - cname: csub
+      arguments:
+        - THTensor* self
+        - THTensor* self
+        - arg: real value
+          default: AS_REAL(1)
+        - THTensor* other
+]]
+
+[[
+  name: resizeAs_
+  cname: resizeAs
+  return: self
+  arguments:
+    - THTensor* self
+    - THTensor* template
+]]
+
+[[
+  name: fill_
+  cname: fill
+  return: self
+  arguments:
+    - THTensor* self
+    - real value
+]]

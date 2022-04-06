@@ -1,5 +1,6 @@
 #include "THAtomic.h"
 #include "THTensor.h"
+#include "THVector.h"
 #include "THMath.h"
 #include "THTensorDimApply.h"
 #include "THBlas.h"

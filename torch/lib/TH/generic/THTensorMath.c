@@ -2,6 +2,12 @@
 #define TH_GENERIC_FILE "generic/THTensorMath.c"
 #else
 
+void THTensor_(fill)(THTensor *r_, real value)
+{
+  TH_TENSOR_APPLY(real, r_,
+                  THVector_(fill)(r__data, value, r__size); break;);
+}
+
 #define LAB_IMPLEMENT_BASIC_FUNCTION(NAME, CFUNC)             \
   void THTensor_(NAME)(THTensor *r_, THTensor *t)                \
   {                                                           \
@@ -163,6 +169,11 @@ void THTensor_(add)(THTensor *r_, THTensor *t, real value)
   }
 }
 
+void THTensor_(sub)(THTensor *r_, THTensor *t, real value)
+{
+  THTensor_(add)(r_, t, -value);
+}
+
 void THTensor_(cadd)(THTensor *r_, THTensor *t, real value, THTensor *src)
 {
   THTensor_(resizeAs)(r_, t);
@@ -182,6 +193,11 @@ void THTensor_(cadd)(THTensor *r_, THTensor *t, real value, THTensor *src)
   } else {
       TH_TENSOR_APPLY3(real, r_, real, t, real, src, *r__data = *t_data + value * *src_data;);
   }
+}
+
+void THTensor_(csub)(THTensor *r_, THTensor *t, real value,THTensor *src)
+{
+  THTensor_(cadd)(r_, t, -value, src);
 }
 
 #endif

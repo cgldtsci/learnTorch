@@ -136,7 +136,7 @@ SET(hdr
   THGeneral.h THAllocator.h THStorage.h THTensor.h THTensorApply.h THBlas.h THMath.h
   THLapack.h THLogAdd.h THRandom.h THVector.h THAtomic.h)
 SET(hdr
-  THGeneral.h THAllocator.h THStorage.h THTensor.h THTensorApply.h THBlas.h THRandom.h THAtomic.h)
+  THGeneral.h THAllocator.h THStorage.h THTensor.h THTensorApply.h THBlas.h THRandom.h THVector.h THAtomic.h)
 
 SET(src
   THGeneral.c THAllocator.c THStorage.c THTensor.c THBlas.c THLapack.c
@@ -314,8 +314,8 @@ INSTALL(FILES
 #  THFilePrivate.h
   ${CMAKE_CURRENT_BINARY_DIR}/THGeneral.h
   THGenerateAllTypes.h
-#  THGenerateFloatTypes.h
-#  THGenerateIntTypes.h
+  THGenerateFloatTypes.h
+  THGenerateIntTypes.h
 #  THLapack.h
 #  THLogAdd.h
 #  THMemoryFile.h
@@ -325,7 +325,7 @@ INSTALL(FILES
   THTensorApply.h
 THTensorDimApply.h
 #  THTensorMacros.h
-#  THVector.h
+  THVector.h
   THAtomic.h
   DESTINATION "${TH_INSTALL_INCLUDE_SUBDIR}/TH")
 
@@ -351,7 +351,7 @@ THTensorDimApply.h
    generic/THTensorMath.h
    generic/THTensorRandom.c
    generic/THTensorRandom.h
-#   generic/THVector.c
+   generic/THVector.c
    DESTINATION "${TH_INSTALL_INCLUDE_SUBDIR}/TH/generic")
 
 IF (WIN32 AND NOT CYGWIN)

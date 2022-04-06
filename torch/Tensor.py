@@ -203,3 +203,15 @@ class _TensorBase(object):
     def __add__(self, other):
         return self.add(other)
     __radd__ = __add__
+
+    def __iadd__(self, other):
+        return self.add_(other)
+
+    def __sub__(self, other):
+        return self.sub(other)
+
+    def __rsub__(self, other):
+        return self.new().resizeAs_(self).fill_(other).add_(-1, self)
+
+    def __isub__(self, other):
+        return self.sub_(other)
