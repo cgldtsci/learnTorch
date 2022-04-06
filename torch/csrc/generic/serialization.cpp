@@ -4,6 +4,14 @@
 
 #define SYSCHECK(call) { int __result = call; if (__result < 0) throw std::system_error(__result, std::system_category()); }
 
+void THPTensor_(writeMetadataRaw)(THTensor *self, int fd)
+{
+  SYSCHECK(write(fd, &self->nDimension, sizeof(long)));
+  SYSCHECK(write(fd, self->size, sizeof(long) * self->nDimension));
+  SYSCHECK(write(fd, self->stride, sizeof(long) * self->nDimension));
+  SYSCHECK(write(fd, &self->storageOffset, sizeof(long)));
+}
+
 void THPStorage_(writeFileRaw)(THStorage *self, int fd)
 {
   real *data;
