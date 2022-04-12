@@ -75,7 +75,7 @@ PyObject * $name(PyObject *_unused, PyObject *args)
         self.module_name = module_name
         self.with_cuda = with_cuda
         self.declarations = []
-#
+
     def process_full_file(self, code):
         short_name = self.module_name.split('.')[-1]
         new_code = MODULE_HEAD.substitute(requres_cuda=('1' if self.with_cuda else '0'))
@@ -93,12 +93,12 @@ PyObject * $name(PyObject *_unused, PyObject *args)
         for declaration in self.declarations:
             module_methods += REGISTER_METHOD_TEMPLATE.substitute(name=declaration['name'])
         return MODULE_METHODS_TEMPLATE.substitute(METHODS=module_methods)
-#
+
     def get_type_unpack(self, arg, option):
         return self.TYPE_UNPACK.get(arg['type'], None)
-#
+
     def get_type_check(self, arg, option):
         return self.TYPE_CHECK.get(arg['type'], None)
-#
+
     def get_wrapper_template(self, declaration):
         return self.WRAPPER_TEMPLATE

@@ -81,7 +81,7 @@ def wrap_function(name, type, arguments):
 
 def generate_wrappers():
     wrap_nn()
-    wrap_cunn()
+#     wrap_cunn()
 
 def wrap_nn():
     wrapper = '#include <TH/TH.h>\n\n\n'
@@ -97,5 +97,5 @@ def wrap_nn():
         NullableArguments(),
     ])
 
-def wrap_cunn():
-    pass
+# def wrap_cunn():
+#     pass

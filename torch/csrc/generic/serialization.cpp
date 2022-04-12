@@ -12,6 +12,21 @@ void THPTensor_(writeMetadataRaw)(THTensor *self, int fd)
   SYSCHECK(write(fd, &self->storageOffset, sizeof(long)));
 }
 
+
+THTensor * THPTensor_(newWithMetadataFileRaw)(int fd, THStorage *storage)
+{
+  THTensorPtr tensor = THTensor_(new)(LIBRARY_STATE_NOARGS);
+  SYSCHECK(read(fd, &tensor->nDimension, sizeof(long)));
+  tensor->size = (long*)THAlloc(tensor->nDimension * sizeof(long));
+  tensor->stride = (long*)THAlloc(tensor->nDimension * sizeof(long));
+  SYSCHECK(read(fd, tensor->size, sizeof(long) * tensor->nDimension));
+  SYSCHECK(read(fd, tensor->stride, sizeof(long) * tensor->nDimension));
+  SYSCHECK(read(fd, &tensor->storageOffset, sizeof(long)));
+  THStorage_(retain)(LIBRARY_STATE storage);
+  tensor->storage = storage;
+  return tensor.release();
+}
+
 void THPStorage_(writeFileRaw)(THStorage *self, int fd)
 {
   real *data;
