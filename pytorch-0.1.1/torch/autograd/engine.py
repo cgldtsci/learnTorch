@@ -5,7 +5,6 @@ class ExecutionEngine(object):
         pass
 
     def _compute_dependencies(self, function):
-        """反复循环，获得整个依赖图"""
         dependencies = {}
         seen = {function}
         queue = [function]
@@ -13,11 +12,9 @@ class ExecutionEngine(object):
             fn = queue.pop()
             for prev_fn, arg_id in fn.previous_functions:
                 if prev_fn not in dependencies:
-                    # prev_fn的每一个output都有一个计数器，统计与后续fn的一个计数
                     dependencies[prev_fn] = [Counter() for _ in prev_fn.output_ids]
                 output_idx = prev_fn.output_ids[arg_id]
                 dependencies[prev_fn][output_idx][fn] += 1
-                # prev_fn 不会重复添加
                 if prev_fn not in seen:
                     queue.append(prev_fn)
                     seen.add(prev_fn)

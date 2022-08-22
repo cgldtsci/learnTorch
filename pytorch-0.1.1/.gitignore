@@ -15,4 +15,3 @@ torch/csrc/nn/THCUNN.cpp
 */**/*.pyc
 */**/*.so*
 */**/*.dylib*
-venv
