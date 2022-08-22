@@ -5,6 +5,7 @@ IF(POLICY CMP0026)
  CMAKE_POLICY(SET CMP0026 OLD)
 ENDIF()
 
+# 类似于list？ torch/lib/TH/cmake  cmake/FindCUDA
 SET(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 
 # Can be compiled standalone
@@ -21,6 +22,7 @@ ENDIF()
 
 # flags
 
+# windows系统
 IF(MSVC)
   # respect the standard
   ADD_DEFINITIONS(-D_CRT_SECURE_NO_DEPRECATE=1)
@@ -45,6 +47,7 @@ IF (APPLE AND CMAKE_COMPILER_IS_GNUCC)
   ENDIF ()
 ENDIF ()
 
+# 没找到
 IF (WITH_OPENMP)
   FIND_PACKAGE(OpenMP)
   IF(OPENMP_FOUND)
@@ -55,6 +58,7 @@ IF (WITH_OPENMP)
   ENDIF(OPENMP_FOUND)
 ENDIF (WITH_OPENMP)
 
+# 不是ARM
 # ARM specific flags
 FIND_PACKAGE(ARM)
 IF (NEON_FOUND)
@@ -70,22 +74,27 @@ IF (CORTEXA9_FOUND)
   SET(CMAKE_C_FLAGS "-mcpu=cortex-a9 ${CMAKE_C_FLAGS}")
 ENDIF (CORTEXA9_FOUND)
 
+# True
 IF(UNIX)
   INCLUDE(CheckFunctionExists)
   SET(CMAKE_EXTRA_INCLUDE_FILES "sys/mman.h")
+  # found
   CHECK_FUNCTION_EXISTS(mmap HAVE_MMAP)
   IF(HAVE_MMAP)
     ADD_DEFINITIONS(-DHAVE_MMAP=1)
   ENDIF(HAVE_MMAP)
   ADD_DEFINITIONS(-D_FILE_OFFSET_BITS=64)
+  # found
   CHECK_FUNCTION_EXISTS(shm_open HAVE_SHM_OPEN)
   IF(HAVE_SHM_OPEN)
     ADD_DEFINITIONS(-DHAVE_SHM_OPEN=1)
   ENDIF(HAVE_SHM_OPEN)
+  # found
   CHECK_FUNCTION_EXISTS(shm_unlink HAVE_SHM_UNLINK)
   IF(HAVE_SHM_UNLINK)
     ADD_DEFINITIONS(-DHAVE_SHM_UNLINK=1)
   ENDIF(HAVE_SHM_UNLINK)
+  # not found
   CHECK_FUNCTION_EXISTS(malloc_usable_size HAVE_MALLOC_USABLE_SIZE)
   IF(HAVE_MALLOC_USABLE_SIZE)
     ADD_DEFINITIONS(-DHAVE_MALLOC_USABLE_SIZE=1)
@@ -123,23 +132,23 @@ IF(C_AVX_FOUND)
   SET(simd ${simd} generic/simd/convolve5x5_avx.c)
 ENDIF(C_AVX_FOUND)
 
-SET(hdr
-  THGeneral.h THAllocator.h THStorage.h THTensor.h THTensorApply.h THBlas.h THMath.h
-  THLapack.h THLogAdd.h THRandom.h THVector.h THAtomic.h)
+# SET(hdr
+#   THGeneral.h THAllocator.h THStorage.h THTensor.h THTensorApply.h THBlas.h THMath.h
+#   THLapack.h THLogAdd.h THRandom.h THVector.h THAtomic.h)
 
-SET(src
-  THGeneral.c THAllocator.c THStorage.c THTensor.c THBlas.c THLapack.c
-  THLogAdd.c THRandom.c THFile.c THDiskFile.c THMemoryFile.c THAtomic.c)
+# SET(src
+#   THGeneral.c THAllocator.c THStorage.c THTensor.c THBlas.c THLapack.c
+#   THLogAdd.c THRandom.c THFile.c THDiskFile.c THMemoryFile.c THAtomic.c)
 
-SET(src ${src} ${hdr} ${simd})
-ADD_LIBRARY(TH SHARED ${src})
-if(BUILD_STATIC)
-  ADD_LIBRARY(TH_static STATIC ${src})
-endif()
+# SET(src ${src} ${hdr} ${simd})
+# ADD_LIBRARY(TH SHARED ${src})
+# if(BUILD_STATIC)
+#   ADD_LIBRARY(TH_static STATIC ${src})
+# endif()
 
-SET_TARGET_PROPERTIES(TH PROPERTIES
-  VERSION   0
-  SOVERSION 0)
+# SET_TARGET_PROPERTIES(TH PROPERTIES
+#   VERSION   0
+#   SOVERSION 0)
 
 CHECK_C_SOURCE_RUNS("
 #include <stdatomic.h>
@@ -203,16 +212,16 @@ ELSE()
 ENDIF()
 
 FIND_PACKAGE(BLAS)
-IF(BLAS_FOUND)
-  SET(USE_BLAS 1)
-  TARGET_LINK_LIBRARIES(TH ${BLAS_LIBRARIES})
-ENDIF(BLAS_FOUND)
+# IF(BLAS_FOUND)
+#   SET(USE_BLAS 1)
+#   TARGET_LINK_LIBRARIES(TH ${BLAS_LIBRARIES})
+# ENDIF(BLAS_FOUND)
 
 FIND_PACKAGE(LAPACK)
-IF(LAPACK_FOUND)
-  SET(USE_LAPACK 1)
-  TARGET_LINK_LIBRARIES(TH ${LAPACK_LIBRARIES})
-ENDIF(LAPACK_FOUND)
+# IF(LAPACK_FOUND)
+#   SET(USE_LAPACK 1)
+#   TARGET_LINK_LIBRARIES(TH ${LAPACK_LIBRARIES})
+# ENDIF(LAPACK_FOUND)
 
 IF(BLAS_IS_ACCELERATE)
   MESSAGE(STATUS "BLAS FOUND IS ACCELERATE: Fix for sdot")
@@ -227,9 +236,9 @@ IF (UNIX AND NOT APPLE)
    ENDIF(NEED_LIBRT)
 ENDIF(UNIX AND NOT APPLE)
 
-IF(NOT MSVC)
-  TARGET_LINK_LIBRARIES(TH m)
-ENDIF(NOT MSVC)
+# IF(NOT MSVC)
+#   TARGET_LINK_LIBRARIES(TH m)
+# ENDIF(NOT MSVC)
 
 SET(CMAKE_REQUIRED_FLAGS_SAVE ${CMAKE_REQUIRED_FLAGS})
 FOREACH(KEYWORD "inline" "__inline__" "__inline")
@@ -277,98 +286,146 @@ IF(C_HAS_THREAD)
 ENDIF(C_HAS_THREAD)
 
 INCLUDE_DIRECTORIES("${CMAKE_CURRENT_BINARY_DIR}")
-CONFIGURE_FILE(THGeneral.h.in "${CMAKE_CURRENT_BINARY_DIR}/THGeneral.h")
+# CONFIGURE_FILE(THGeneral.h.in "${CMAKE_CURRENT_BINARY_DIR}/THGeneral.h")
 
-INSTALL(TARGETS TH
-  EXPORT TH-exports
-  RUNTIME DESTINATION "${TH_INSTALL_BIN_SUBDIR}"
-  LIBRARY DESTINATION "${TH_INSTALL_LIB_SUBDIR}"
-  ARCHIVE DESTINATION "${TH_INSTALL_LIB_SUBDIR}")
+# INSTALL(TARGETS TH
+#   EXPORT TH-exports
+#   RUNTIME DESTINATION "${TH_INSTALL_BIN_SUBDIR}"
+#   LIBRARY DESTINATION "${TH_INSTALL_LIB_SUBDIR}"
+#   ARCHIVE DESTINATION "${TH_INSTALL_LIB_SUBDIR}")
 
-INSTALL(FILES
-  TH.h
-  THAllocator.h
-  THMath.h
-  THBlas.h
-  THDiskFile.h
-  THFile.h
-  THFilePrivate.h
-  ${CMAKE_CURRENT_BINARY_DIR}/THGeneral.h
-  THGenerateAllTypes.h
-  THGenerateFloatTypes.h
-  THGenerateIntTypes.h
-  THLapack.h
-  THLogAdd.h
-  THMemoryFile.h
-  THRandom.h
-  THStorage.h
-  THTensor.h
-  THTensorApply.h
-  THTensorDimApply.h
-  THTensorMacros.h
-  THVector.h
-  THAtomic.h
-  DESTINATION "${TH_INSTALL_INCLUDE_SUBDIR}/TH")
 
-INSTALL(FILES
-  generic/THBlas.c
-  generic/THBlas.h
-  generic/THLapack.c
-  generic/THLapack.h
-  generic/THStorage.c
-  generic/THStorage.h
-  generic/THStorageCopy.c
-  generic/THStorageCopy.h
-  generic/THTensor.c
-  generic/THTensor.h
-  generic/THTensorConv.c
-  generic/THTensorConv.h
-  generic/THTensorCopy.c
-  generic/THTensorCopy.h
-  generic/THTensorLapack.c
-  generic/THTensorLapack.h
-  generic/THTensorMath.c
-  generic/THTensorMath.h
-  generic/THTensorRandom.c
-  generic/THTensorRandom.h
-  generic/THVector.c
-  DESTINATION "${TH_INSTALL_INCLUDE_SUBDIR}/TH/generic")
-
+#INSTALL(FILES
+#  TH.h
+#  THAllocator.h
+#  THMath.h
+#  THBlas.h
+#  THDiskFile.h
+#  THFile.h
+#  THFilePrivate.h
+#  ${CMAKE_CURRENT_BINARY_DIR}/THGeneral.h
+#  THGenerateAllTypes.h
+#  THGenerateFloatTypes.h
+#  THGenerateIntTypes.h
+#  THLapack.h
+#  THLogAdd.h
+#  THMemoryFile.h
+#  THRandom.h
+#  THStorage.h
+#  THTensor.h
+#  THTensorApply.h
+#  THTensorDimApply.h
+#  THTensorMacros.h
+#  THVector.h
+#  THAtomic.h
+#  DESTINATION "${TH_INSTALL_INCLUDE_SUBDIR}/TH")
+#
+#INSTALL(FILES
+#  generic/THBlas.c
+#  generic/THBlas.h
+#  generic/THLapack.c
+#  generic/THLapack.h
+#  generic/THStorage.c
+#  generic/THStorage.h
+#  generic/THStorageCopy.c
+#  generic/THStorageCopy.h
+#  generic/THTensor.c
+#  generic/THTensor.h
+#  generic/THTensorConv.c
+#  generic/THTensorConv.h
+#  generic/THTensorCopy.c
+#  generic/THTensorCopy.h
+#  generic/THTensorLapack.c
+#  generic/THTensorLapack.h
+#  generic/THTensorMath.c
+#  generic/THTensorMath.h
+#  generic/THTensorRandom.c
+#  generic/THTensorRandom.h
+#  generic/THVector.c
+#  DESTINATION "${TH_INSTALL_INCLUDE_SUBDIR}/TH/generic")
+#INSTALL(FILES
+#  TH.h
+#  THAllocator.h
+#  THMath.h
+#  THBlas.h
+#  THDiskFile.h
+#  THFile.h
+#  THFilePrivate.h
+#  ${CMAKE_CURRENT_BINARY_DIR}/THGeneral.h
+#  THGenerateAllTypes.h
+#  THGenerateFloatTypes.h
+#  THGenerateIntTypes.h
+#  THLapack.h
+#  THLogAdd.h
+#  THMemoryFile.h
+#  THRandom.h
+#  THStorage.h
+#  THTensor.h
+#  THTensorApply.h
+#  THTensorDimApply.h
+#  THTensorMacros.h
+#  THVector.h
+#  THAtomic.h
+#  DESTINATION "${TH_INSTALL_INCLUDE_SUBDIR}/TH")
+#
+#INSTALL(FILES
+#  generic/THBlas.c
+#  generic/THBlas.h
+#  generic/THLapack.c
+#  generic/THLapack.h
+#  generic/THStorage.c
+#  generic/THStorage.h
+#  generic/THStorageCopy.c
+#  generic/THStorageCopy.h
+#  generic/THTensor.c
+#  generic/THTensor.h
+#  generic/THTensorConv.c
+#  generic/THTensorConv.h
+#  generic/THTensorCopy.c
+#  generic/THTensorCopy.h
+#  generic/THTensorLapack.c
+#  generic/THTensorLapack.h
+#  generic/THTensorMath.c
+#  generic/THTensorMath.h
+#  generic/THTensorRandom.c
+#  generic/THTensorRandom.h
+#  generic/THVector.c
+#  DESTINATION "${TH_INSTALL_INCLUDE_SUBDIR}/TH/generic")
 
 IF (WIN32 AND NOT CYGWIN)
   SET(BLAS_INSTALL_LIBRARIES "OFF"
     CACHE BOOL "Copy the required BLAS DLLs into the TH install dirs")
 ENDIF (WIN32 AND NOT CYGWIN)
-
-MACRO(Install_Required_Library ln)
-    get_filename_component(libpath ${ln} PATH)
-    get_filename_component(libname ${ln} NAME_WE)
-    file(GLOB libdlls "${libpath}/${libname}*.dll")
-    install(PROGRAMS ${libdlls}
-      DESTINATION "${TH_INSTALL_BIN_SUBDIR}")
-ENDMACRO(Install_Required_Library libname)
-
-IF (BLAS_FOUND AND BLAS_INSTALL_LIBRARIES)
-  IF (BLAS_goto2_LIBRARY)
-    Install_Required_Library(${BLAS_goto2_LIBRARY})
-    Install_Required_Library("${libpath}/libgfortran")
-    Install_Required_Library("${libpath}/libquadmath")
-    Install_Required_Library("${libpath}/libgcc")
-  ENDIF()
-  IF (BLAS_openblas_LIBRARY)
-    Install_Required_Library(${BLAS_openblas_LIBRARY})
-    Install_Required_Library("${libpath}/libquadmath")
-    Install_Required_Library("${libpath}/libgfortran")
-    Install_Required_Library("${libpath}/libquadmath")
-    Install_Required_Library("${libpath}/libgcc")
-  ENDIF()
-ENDIF()
-
-# Create THConfig.cmake
-GET_TARGET_PROPERTY(TH_OUTPUT_NAME TH LOCATION)
-GET_FILENAME_COMPONENT(TH_OUTPUT_NAME ${TH_OUTPUT_NAME} NAME)
-SET(TH_LIBRARIES "${CMAKE_INSTALL_PREFIX}/${TH_INSTALL_LIB_SUBDIR}/${TH_OUTPUT_NAME}")
-SET(TH_INCLUDE_DIR "${CMAKE_INSTALL_PREFIX}/${TH_INSTALL_INCLUDE_SUBDIR}/TH")
-CONFIGURE_FILE(THConfig.cmake.in "${CMAKE_CURRENT_BINARY_DIR}/cmake-exports/THConfig.cmake")
-INSTALL(FILES "${CMAKE_CURRENT_BINARY_DIR}/cmake-exports/THConfig.cmake"
-  DESTINATION "${TH_INSTALL_CMAKE_SUBDIR}")
+MESSAGE("TH END")
+#MACRO(Install_Required_Library ln)
+#    get_filename_component(libpath ${ln} PATH)
+#    get_filename_component(libname ${ln} NAME_WE)
+#    file(GLOB libdlls "${libpath}/${libname}*.dll")
+#    install(PROGRAMS ${libdlls}
+#      DESTINATION "${TH_INSTALL_BIN_SUBDIR}")
+#ENDMACRO(Install_Required_Library libname)
+#
+#IF (BLAS_FOUND AND BLAS_INSTALL_LIBRARIES)
+#  IF (BLAS_goto2_LIBRARY)
+#    Install_Required_Library(${BLAS_goto2_LIBRARY})
+#    Install_Required_Library("${libpath}/libgfortran")
+#    Install_Required_Library("${libpath}/libquadmath")
+#    Install_Required_Library("${libpath}/libgcc")
+#  ENDIF()
+#  IF (BLAS_openblas_LIBRARY)
+#    Install_Required_Library(${BLAS_openblas_LIBRARY})
+#    Install_Required_Library("${libpath}/libquadmath")
+#    Install_Required_Library("${libpath}/libgfortran")
+#    Install_Required_Library("${libpath}/libquadmath")
+#    Install_Required_Library("${libpath}/libgcc")
+#  ENDIF()
+#ENDIF()
+#
+## Create THConfig.cmake
+#GET_TARGET_PROPERTY(TH_OUTPUT_NAME TH LOCATION)
+#GET_FILENAME_COMPONENT(TH_OUTPUT_NAME ${TH_OUTPUT_NAME} NAME)
+#SET(TH_LIBRARIES "${CMAKE_INSTALL_PREFIX}/${TH_INSTALL_LIB_SUBDIR}/${TH_OUTPUT_NAME}")
+#SET(TH_INCLUDE_DIR "${CMAKE_INSTALL_PREFIX}/${TH_INSTALL_INCLUDE_SUBDIR}/TH")
+#CONFIGURE_FILE(THConfig.cmake.in "${CMAKE_CURRENT_BINARY_DIR}/cmake-exports/THConfig.cmake")
+#INSTALL(FILES "${CMAKE_CURRENT_BINARY_DIR}/cmake-exports/THConfig.cmake"
+#  DESTINATION "${TH_INSTALL_CMAKE_SUBDIR}")

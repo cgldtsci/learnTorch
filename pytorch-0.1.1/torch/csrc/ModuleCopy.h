@@ -1,3 +1,4 @@
+// hash方法
 struct pair_hasher {
 
   size_t operator()(std::pair<PyObject *, PyObject *> types) const {
@@ -9,6 +10,7 @@ struct pair_hasher {
   std::hash<PyObject *> ptr_hash = std::hash<PyObject *>();
 };
 
+// 转换函数
 using THPCopyFunction = void (*)(PyObject *dst, PyObject *src);
 extern std::unordered_map<std::pair<PyObject *, PyObject *>, THPCopyFunction, pair_hasher> tensor_copy_handlers;
 extern std::unordered_map<std::pair<PyObject *, PyObject *>, THPCopyFunction, pair_hasher> storage_copy_handlers;

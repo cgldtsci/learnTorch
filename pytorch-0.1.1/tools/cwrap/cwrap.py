@@ -76,7 +76,8 @@ class cwrap(object):
                 in_declaration = True
             elif line == ']]':
                 in_declaration = False
-                declaration = yaml.load('\n'.join(declaration_lines))
+                # yaml.load需更改为yaml.safe_load
+                declaration = yaml.safe_load('\n'.join(declaration_lines))
                 self.set_declaration_defaults(declaration)
 
                 # Pass declaration in a list - maybe some plugins want to add

@@ -17,6 +17,7 @@ DEBUG = False
 # Monkey-patch setuptools to compile in parallel
 ################################################################################
 
+# 猴子补丁，动态加载，实现并行compile
 def parallelCCompile(self, sources, output_dir=None, macros=None, include_dirs=None, debug=0, extra_preargs=None, extra_postargs=None, depends=None):
     # those lines are copied from distutils.ccompiler.CCompiler directly
     macros, objects, extra_postargs, pp_opts, build = self._setup_compile(output_dir, macros, include_dirs, sources, depends, extra_postargs)
@@ -38,6 +39,8 @@ distutils.ccompiler.CCompiler.compile = parallelCCompile
 # Custom build commands
 ################################################################################
 
+# 建立依赖, build会通过执行cmake,make install来安装TH、THNN等相关包
+# 并产生 THNN.h、THCUNN.h
 class build_deps(Command):
     user_options = []
 
@@ -71,50 +74,56 @@ class build_module(Command):
         self.run_command('build_ext')
 
 
-class build_ext(setuptools.command.build_ext.build_ext):
-    def run(self):
-        # cwrap depends on pyyaml, so we can't import it earlier
-        from tools.cwrap import cwrap
-        from tools.cwrap.plugins.THPPlugin import THPPlugin
-        from tools.cwrap.plugins.THPLongArgsPlugin import THPLongArgsPlugin
-        from tools.cwrap.plugins.ArgcountSortPlugin import ArgcountSortPlugin
-        from tools.cwrap.plugins.AutoGPU import AutoGPU
-        cwrap('torch/csrc/generic/TensorMethods.cwrap', plugins=[
-            THPLongArgsPlugin(), THPPlugin(), ArgcountSortPlugin(), AutoGPU()
-        ])
-        # It's an old-style class in Python 2.7...
-        setuptools.command.build_ext.build_ext.run(self)
+# class build_ext(setuptools.command.build_ext.build_ext):
+#     def run(self):
+#         # cwrap depends on pyyaml, so we can't import it earlier
+#         from tools.cwrap import cwrap
+#         from tools.cwrap.plugins.THPPlugin import THPPlugin
+#         from tools.cwrap.plugins.THPLongArgsPlugin import THPLongArgsPlugin
+#         from tools.cwrap.plugins.ArgcountSortPlugin import ArgcountSortPlugin
+#         from tools.cwrap.plugins.AutoGPU import AutoGPU
+#         cwrap('torch/csrc/generic/TensorMethods.cwrap', plugins=[
+#             THPLongArgsPlugin(), THPPlugin(), ArgcountSortPlugin(), AutoGPU()
+#         ])
+#         # It's an old-style class in Python 2.7...
+#         setuptools.command.build_ext.build_ext.run(self)
+#
+#
 
-
-
+# 先 build_deps 安装依赖包
+# sub_commands 顺序
+# - build_py - pure Python modules
+# - build_clib    - standalone C libraries
+# - build_ext     - Python extensions
+# - build_scripts - (Python) scripts
 class build(distutils.command.build.build):
     sub_commands = [
         ('build_deps', lambda self: True),
     ] + distutils.command.build.build.sub_commands
 
-
-class install(setuptools.command.install.install):
-    def run(self):
-        if not self.skip_build:
-            self.run_command('build_deps')
-        setuptools.command.install.install.run(self)
-
-
-class clean(distutils.command.clean.clean):
-    def run(self):
-        with open('.gitignore', 'r') as f:
-            ignores = f.read()
-            for glob in filter(bool, ignores.split('\n')):
-                shutil.rmtree(glob, ignore_errors=True)
-        # It's an old-style class in Python 2.7...
-        distutils.command.clean.clean.run(self)
-
-
-
-################################################################################
-# Configure compile flags
-################################################################################
-
+#
+# class install(setuptools.command.install.install):
+#     def run(self):
+#         if not self.skip_build:
+#             self.run_command('build_deps')
+#         setuptools.command.install.install.run(self)
+#
+#
+# class clean(distutils.command.clean.clean):
+#     def run(self):
+#         with open('.gitignore', 'r') as f:
+#             ignores = f.read()
+#             for glob in filter(bool, ignores.split('\n')):
+#                 shutil.rmtree(glob, ignore_errors=True)
+#         # It's an old-style class in Python 2.7...
+#         distutils.command.clean.clean.run(self)
+#
+#
+#
+# ################################################################################
+# # Configure compile flags
+# ################################################################################
+#
 include_dirs = []
 extra_link_args = []
 extra_compile_args = ['-std=c++11']
@@ -188,8 +197,9 @@ def make_relative_rpath(path):
 ################################################################################
 
 extensions = []
-packages = find_packages(exclude=('tools.*', 'torch.cuda', 'torch.legacy.cunn'))
+# packages = find_packages(exclude=('tools.*', 'torch.cuda', 'torch.legacy.cunn'))
 
+# C Extension
 C = Extension("torch._C",
     libraries=main_libraries,
     sources=main_sources,
@@ -200,39 +210,39 @@ C = Extension("torch._C",
 )
 extensions.append(C)
 
-THNN = Extension("torch._thnn._THNN",
-    libraries=['TH', 'THNN'],
-    sources=['torch/csrc/nn/THNN.cpp'],
-    language='c++',
-    extra_compile_args=extra_compile_args,
-    include_dirs=include_dirs,
-    extra_link_args=extra_link_args + [make_relative_rpath('../lib')]
-)
-extensions.append(THNN)
-
-if WITH_CUDA:
-    THCUNN = Extension("torch._thnn._THCUNN",
-        libraries=['TH', 'THC', 'THCUNN'],
-        sources=['torch/csrc/nn/THCUNN.cpp'],
-        language='c++',
-        extra_compile_args=extra_compile_args,
-        include_dirs=include_dirs,
-        extra_link_args=extra_link_args + [make_relative_rpath('../lib')]
-    )
-    extensions.append(THCUNN)
-    packages += ['torch.cuda', 'torch.legacy.cunn']
-
+# THNN = Extension("torch._thnn._THNN",
+#     libraries=['TH', 'THNN'],
+#     sources=['torch/csrc/nn/THNN.cpp'],
+#     language='c++',
+#     extra_compile_args=extra_compile_args,
+#     include_dirs=include_dirs,
+#     extra_link_args=extra_link_args + [make_relative_rpath('../lib')]
+# )
+# extensions.append(THNN)
+#
+# if WITH_CUDA:
+#     THCUNN = Extension("torch._thnn._THCUNN",
+#         libraries=['TH', 'THC', 'THCUNN'],
+#         sources=['torch/csrc/nn/THCUNN.cpp'],
+#         language='c++',
+#         extra_compile_args=extra_compile_args,
+#         include_dirs=include_dirs,
+#         extra_link_args=extra_link_args + [make_relative_rpath('../lib')]
+#     )
+#     extensions.append(THCUNN)
+#     packages += ['torch.cuda', 'torch.legacy.cunn']
+#
 setup(name="torch", version="0.1",
     ext_modules=extensions,
     cmdclass = {
-        'build': build,
-        'build_ext': build_ext,
+#         'build': build,
+#         'build_ext': build_ext,
         'build_deps': build_deps,
-        'build_module': build_module,
-        'install': install,
-        'clean': clean,
+#         'build_module': build_module,
+#         'install': install,
+#         'clean': clean,
     },
-    packages=packages,
-    package_data={'torch': ['lib/*.so*', 'lib/*.h']},
-    install_requires=['pyyaml'],
+#     packages=packages,
+#     package_data={'torch': ['lib/*.so*', 'lib/*.h']},
+#     install_requires=['pyyaml'],
 )

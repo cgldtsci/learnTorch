@@ -1,3 +1,4 @@
+// THNAME为dst
 #define DECLARE_COPY(THNAME)                                                   \
 void TH_CONCAT_3(_THPCopy_,THNAME,_copyDouble)(PyObject *dst, PyObject *src);  \
 void TH_CONCAT_3(_THPCopy_,THNAME,_copyFloat)(PyObject *dst, PyObject *src);   \
@@ -23,6 +24,7 @@ DECLARE_COPY(THCharStorage)
 DECLARE_COPY(THByteStorage)
 #undef DECLARE_COPY
 
+// key 为(dst,src)，value为转换函数），将这些插入到map里
 static bool THPModule_initCopy(PyObject *unused)
 {
 #define INIT_TENSOR_COPY(TYPE, THNAME)                                         \

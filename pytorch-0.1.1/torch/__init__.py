@@ -1,3 +1,4 @@
+# 这里就引进了包，而module.cpp  PyMODINIT_FUNC PyInit__C() 可以找到
 from torch._C import *
 import sys
 import math
@@ -16,21 +17,22 @@ def _import_dotted_name(name):
         obj = getattr(obj, component)
     return obj
 
-# range gets shadowed by torch.range
-def _pyrange(*args, **kwargs):
-    return __builtins__['range'](*args, **kwargs)
-
-def typename(o):
-    return o.__module__ + "." + o.__class__.__name__
-
-def isTensor(obj):
-    return obj.__class__ in _tensor_classes
-
-def isStorage(obj):
-    return obj.__class__ in _storage_classes
-
-def isLongStorage(obj):
-    return isinstance(obj, LongStorage)
+# # range gets shadowed by torch.range
+# # 在py3.6里应该为__builtins__.range
+# def _pyrange(*args, **kwargs):
+#     return __builtins__['range'](*args, **kwargs)
+#
+# def typename(o):
+#     return o.__module__ + "." + o.__class__.__name__
+#
+# def isTensor(obj):
+#     return obj.__class__ in _tensor_classes
+#
+# def isStorage(obj):
+#     return obj.__class__ in _storage_classes
+#
+# def isLongStorage(obj):
+#     return isinstance(obj, LongStorage)
 
 def setDefaultTensorType(t):
     global Tensor
@@ -40,11 +42,11 @@ def setDefaultTensorType(t):
     Tensor = _import_dotted_name(t)
     Storage = _import_dotted_name(t.replace('Tensor', 'Storage'))
 
-def getDefaultTensorType():
-    return _defaultTensorTypeName
-
-from .serialization import save, load
-
+# def getDefaultTensorType():
+#     return _defaultTensorTypeName
+#
+# from .serialization import save, load
+#
 from .Storage import _StorageBase
 from .Tensor import _TensorBase
 
@@ -105,23 +107,24 @@ setDefaultTensorType('torch.DoubleTensor')
 # Initialize extension
 ################################################################################
 
+# 引进module后，调用其初始化函数
 _C._initExtension()
 
-################################################################################
-# Remove unnecessary members
-################################################################################
-
-del DoubleStorageBase
-del FloatStorageBase
-del LongStorageBase
-del IntStorageBase
-del ShortStorageBase
-del CharStorageBase
-del ByteStorageBase
-del DoubleTensorBase
-del FloatTensorBase
-del LongTensorBase
-del IntTensorBase
-del ShortTensorBase
-del CharTensorBase
-del ByteTensorBase
+# ################################################################################
+# # Remove unnecessary members
+# ################################################################################
+#
+# del DoubleStorageBase
+# del FloatStorageBase
+# del LongStorageBase
+# del IntStorageBase
+# del ShortStorageBase
+# del CharStorageBase
+# del ByteStorageBase
+# del DoubleTensorBase
+# del FloatTensorBase
+# del LongTensorBase
+# del IntTensorBase
+# del ShortTensorBase
+# del CharTensorBase
+# del ByteTensorBase
